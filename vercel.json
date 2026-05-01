@@ -1,21 +1,20 @@
 {
   "version": 2,
   "builds": [
-    {
-      "src": "api/webhook.js",
-      "use": "@vercel/node"
-    }
+    { "src": "api/webhook.js", "use": "@vercel/node" },
+    { "src": "api/generate-site.js", "use": "@vercel/node" }
   ],
   "routes": [
-    {
-      "src": "/api/webhook",
-      "dest": "api/webhook.js"
-    }
+    { "src": "/api/webhook", "dest": "api/webhook.js" },
+    { "src": "/api/generate-site", "dest": "api/generate-site.js" },
+    { "src": "/preview/(.*)", "dest": "api/generate-site.js?business=$1" }
   ],
   "env": {
     "TELEGRAM_BOT_TOKEN_MORPHEUS": "8251575468:AAEs0bvHWRAFuC3JoA2oQrGFBpfT9s0TcWs",
     "TELEGRAM_BOT_TOKEN_TRINITY": "841865554:AAEbHF20QPm0z-WZa25R50kJNt0vfreG5yY",
-    "ABACUS_API_ENDPOINT": "https://api.irise-academy.com/abacus/v1/agents/register",
+    "MORPHEUS_API_URL": "http://51.79.29.15:19000",
+    "MORPHEUS_API_KEY": "_khOvWMO6RB0xGqSFXL8d2M7ofj7sRHVgIFEmkcpP3iKksFFnZuQ60w-j1T2R8mJ",
+    "GEM_AGENCY_URL": "https://gemtheagency.com",
     "BREVO_API_KEY": "YOUR_BREVO_API_KEY_HERE",
     "STRIPE_SECRET_KEY": "YOUR_STRIPE_KEY_HERE"
   }
