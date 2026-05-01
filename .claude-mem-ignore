@@ -1,0 +1,10 @@
+# Exclude from claude-mem memory capture
+*.env
+.env.*
+*credentials*
+*api_key*
+*secret*
+*token*
+*password*
+*.pem
+*.key
