@@ -10,11 +10,12 @@
     { "src": "/preview/(.*)", "dest": "api/generate-site.js?business=$1" }
   ],
   "env": {
-    "TELEGRAM_BOT_TOKEN_MORPHEUS": "8251575468:AAEs0bvHWRAFuC3JoA2oQrGFBpfT9s0TcWs",
+    "TELEGRAM_BOT_TOKEN_MORPHEUS": "8178063761:AAGXIbBi-12x3leu4RFkyT1dK8Cj0i_X2Xs",
     "TELEGRAM_BOT_TOKEN_TRINITY": "841865554:AAEbHF20QPm0z-WZa25R50kJNt0vfreG5yY",
     "MORPHEUS_API_URL": "http://51.79.29.15:19000",
     "MORPHEUS_API_KEY": "_khOvWMO6RB0xGqSFXL8d2M7ofj7sRHVgIFEmkcpP3iKksFFnZuQ60w-j1T2R8mJ",
     "GEM_AGENCY_URL": "https://gemtheagency.com",
+    "OPENROUTER_API_KEY": "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",
     "BREVO_API_KEY": "YOUR_BREVO_API_KEY_HERE",
     "STRIPE_SECRET_KEY": "YOUR_STRIPE_KEY_HERE"
   }

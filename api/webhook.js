@@ -5,6 +5,7 @@ const { PRICING, NICHES, previewUrl, buildOffer } = require('./revenue/websites'
 const { get: getPayment } = require('./revenue/payments');
 const { SCRIPTS } = require('./revenue/outreach');
 const { init, addRevenue, getStatus, state } = require('./revenue/tracker');
+const { chat, isDolphin, clearHistory, MODELS } = require('./revenue/llm');
 
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN_MORPHEUS;
 const MORPHEUS_URL = process.env.MORPHEUS_API_URL || 'http://51.79.29.15:19000';
@@ -395,7 +396,11 @@ OVH: \`51.79.29.15:19000\`
 /tasks — Pending tasks
 /run [skill] — Execute skill
 
-*AI:* Free-form messages route to Morpheus AI (OVH)`)
+*AI ENGINE:*
+/model — Show active LLM routing
+/clear — Reset conversation history
+🐬 Legal/mortgage/case → Dolphin (uncensored)
+⚡ General → Gemma 3 27B`)
 };
 
 // ─── SESSION FLOW HANDLER ────────────────────────────────────────────────────
@@ -551,20 +556,49 @@ module.exports = async (req, res) => {
         help: () => cmd.help(chatId)
       };
 
+      const extraCmds = {
+        model: async () => {
+          const usingDolphin = sessions[userId]?.preferDolphin;
+          await md(chatId, `🧠 *ACTIVE LLM ROUTING*\n\n🐬 Dolphin (legal/property/mortgage): \`${MODELS.dolphin}\`\n⚡ Gemma (general): \`${MODELS.gemma}\`\n\nRouting is *automatic* based on your message content.\n\nLegal, mortgage, contract, case keywords → Dolphin\nGeneral conversation → Gemma\n\n/clear — Reset conversation history`);
+        },
+        clear: async () => {
+          clearHistory(userId);
+          await md(chatId, '✅ Conversation history cleared.');
+        }
+      };
+
       if (directCmds[c]) await directCmds[c]();
+      else if (extraCmds[c]) await extraCmds[c]();
       else await md(chatId, `⚠️ Unknown command. /help for reference.`);
 
     } else {
       const inSession = await handleSession(chatId, userId, text);
       if (!inSession) {
-        // Route to OVHCloud Morpheus AI
         try {
           await bot.sendChatAction(chatId, 'typing');
-          const reply = await askMorpheus(text, userId);
-          await md(chatId, reply);
+          const useDolphin = isDolphin(text);
+
+          // Try OpenRouter first (Dolphin or Gemma based on content)
+          try {
+            const { reply, model, useDolphin: routed } = await chat(userId, text);
+            const modelLabel = routed
+              ? `🐬 _Dolphin — legal/case mode_`
+              : `⚡ _Gemma — general mode_`;
+            await md(chatId, `${reply}\n\n${modelLabel}`);
+          } catch (orErr) {
+            console.error('[OPENROUTER ERROR]', orErr.message);
+            // Fallback to OVH Morpheus API
+            try {
+              const reply = await askMorpheus(text, userId);
+              await md(chatId, reply);
+            } catch (ovhErr) {
+              console.error('[OVH FALLBACK ERROR]', ovhErr.message);
+              await md(chatId, `⚠️ Both AI endpoints unreachable.\n\nOVH: \`${ovhErr.message.slice(0, 80)}\`\n\n/health — check server status`);
+            }
+          }
         } catch (e) {
-          console.error('[OVH API ERROR]', e.message);
-          await md(chatId, `I'm having trouble reaching the OVH server.\n\n_Error: ${e.message.slice(0, 100)}_\n\nTry /health to check server status.`);
+          console.error('[MESSAGE ERROR]', e.message);
+          await md(chatId, `⚠️ Error: \`${e.message.slice(0, 100)}\``);
         }
       }
     }
