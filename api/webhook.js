@@ -4,7 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 const { postToChannel } = require('../lib/telegramPublisher');
 
 const MORPHEUS_TOKEN = process.env.TELEGRAM_BOT_TOKEN_MORPHEUS;
-const ABACUS_ENDPOINT = process.env.ABACUS_API_ENDPOINT;
+const MORPHEUS_AGENT_ENDPOINT = process.env.MORPHEUS_AGENT_ENDPOINT;
 const IRISE_CHANNEL_ID = process.env.IRISE_CHANNEL_ID;
 
 const bot = new TelegramBot(MORPHEUS_TOKEN);
@@ -177,7 +177,7 @@ Questions: Ask me anything
     };
 
     try {
-      console.log('[ABACUS SPAWN]', agentPayload);
+      console.log('[MORPHEUS SPAWN]', agentPayload);
 
       const intakeMessage = `
 🔷 **Trust Intake Interview Initiated**

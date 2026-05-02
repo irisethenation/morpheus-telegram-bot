@@ -70,7 +70,7 @@ In Vercel dashboard → Project Settings → Environment Variables, add:
 |----------|-------|
 | `TELEGRAM_BOT_TOKEN_MORPHEUS` | `8251575468:AAEs0bvHWRAFuC3JoA2oQrGFBpfT9s0TcWs` |
 | `TELEGRAM_BOT_TOKEN_TRINITY` | `841865554:AAEbHF20QPm0z-WZa25R50kJNt0vfreG5yY` |
-| `ABACUS_API_ENDPOINT` | `https://api.irise-academy.com/abacus/v1/agents/register` |
+| `MORPHEUS_AGENT_ENDPOINT` | `https://api.irise.academy/morpheus/v1/agents/spawn` |
 | `BREVO_API_KEY` | (Your Brevo API key) |
 | `STRIPE_SECRET_KEY` | (Your Stripe secret key) |
 
@@ -128,7 +128,7 @@ All transactions logged to console (Vercel logs).
 - PostgreSQL database (Vercel Postgres)
 - Brevo email automation
 - Stripe payment processing
-- Abacus.AI agent orchestration
+- Morpheus agent orchestration
 
 ---
 
@@ -155,9 +155,9 @@ Once bot is live and responding:
    - Store user states
    - Track transactions
 
-3. **Abacus.AI Integration**
-   - Implement agent spawning API
-   - Route conversations to specialists
+3. **Morpheus Agent Integration**
+   - Implement agent spawning via `MORPHEUS_AGENT_ENDPOINT`
+   - Route conversations to specialist agents
    - Automate trust intake workflow
 
 4. **Email Automation**
