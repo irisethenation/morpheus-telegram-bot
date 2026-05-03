@@ -25,6 +25,8 @@
     "IRISE_CHANNEL_ID":            "YOUR_TELEGRAM_CHANNEL_ID_HERE",
     "PUBLISH_SECRET":              "YOUR_PUBLISH_SECRET_HERE",
     "CRON_SECRET":                 "YOUR_CRON_SECRET_HERE",
-    "ANTHROPIC_API_KEY":           "YOUR_ANTHROPIC_API_KEY_HERE"
+    "ANTHROPIC_API_KEY":           "YOUR_ANTHROPIC_API_KEY_HERE",
+    "TRYPOST_URL":                 "https://social.irise.academy",
+    "TRYPOST_API_KEY":             "YOUR_TRYPOST_API_KEY_HERE"
   }
 }
