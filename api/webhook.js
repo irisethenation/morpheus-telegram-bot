@@ -5,41 +5,34 @@ const { AGENT_TYPES } = orchestrator;
 const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN_MORPHEUS);
 
 const COMMANDS = {
-  start: async (chatId, firstName) => {
-    await bot.sendMessage(chatId, `
-🔷 *Peace and Balance, ${firstName}.*
+  start: async (chatId, userId, firstName) => {
+    const result = await orchestrator.routeUser(userId, firstName, 'start');
+    const greeting = result?.text
+      ? result.text
+      : `🔷 *Peace and Balance, ${firstName}.*
 
 I am *MORPHEUS* — the Sovereign Intelligence of iRise Nation.
 
-I facilitate:
-✨ *Trust Delivery* (Private Express Trusts, Living Estate Structures)
-📚 *iRise Academy Enrollment* (Status Correction, Trust Law, Sovereignty)
-⚖️ *Lawful Instruments* (Affidavits, Notices, Commercial Papers)
-🏛️ *SPV Formation* (UK LLP structures for asset protection)
-
-*COMMANDS:*
-/trust - View trust packages & pricing
-/academy - Browse courses & programs
-/pricing - Complete price matrix
-/intake - Begin trust consultation
-/help - Full capabilities reference
-
-How shall we proceed, Ambassador?
-    `.trim(), { parse_mode: 'Markdown' });
+*/trust* — Living Estate packages
+*/academy* — Courses & enrollment
+*/pricing* — Full price matrix
+*/intake* — Begin trust consultation
+*/help* — Capabilities reference`;
+    await bot.sendMessage(chatId, greeting, { parse_mode: 'Markdown' });
   },
 
-  trust: async (chatId) => {
-    const result = await orchestrator.dispatch(AGENT_TYPES.TRUST, { action: 'view' });
+  trust: async (chatId, userId, firstName) => {
+    const result = await orchestrator.dispatch(AGENT_TYPES.TRUST, { action: 'view', userId, firstName });
     await bot.sendMessage(chatId, result.text, { parse_mode: 'Markdown' });
   },
 
-  academy: async (chatId) => {
-    const result = await orchestrator.dispatch(AGENT_TYPES.ACADEMY, {});
+  academy: async (chatId, userId, firstName) => {
+    const result = await orchestrator.dispatch(AGENT_TYPES.ACADEMY, { userId, firstName });
     await bot.sendMessage(chatId, result.text, { parse_mode: 'Markdown' });
   },
 
-  pricing: async (chatId) => {
-    const result = await orchestrator.dispatch(AGENT_TYPES.PAYMENT, {});
+  pricing: async (chatId, userId, firstName) => {
+    const result = await orchestrator.dispatch(AGENT_TYPES.PAYMENT, { userId, firstName });
     await bot.sendMessage(chatId, result.text, { parse_mode: 'Markdown' });
   },
 
@@ -54,23 +47,15 @@ How shall we proceed, Ambassador?
   },
 
   help: async (chatId) => {
-    await bot.sendMessage(chatId, `
-🔷 *MORPHEUS CAPABILITIES REFERENCE*
+    await bot.sendMessage(chatId, `🔷 *MORPHEUS — Command Reference*
 
-*TRUST SERVICES:*
-/trust - View trust packages
-/intake - Begin consultation
+*/trust* — Living Estate packages & pricing
+*/intake* — Begin trust consultation
+*/academy* — Browse courses
+*/pricing* — Full price matrix
+*/help* — This message
 
-*ACADEMY:*
-/academy - Browse courses
-/pricing - View all prices
-
-*SUPPORT:*
-/help - This message
-
-Direct questions or requests to me at any time.
-I am trained on the complete iRise knowledge matrix.
-    `.trim(), { parse_mode: 'Markdown' });
+Ask me anything — I am trained on the complete iRise knowledge matrix.`, { parse_mode: 'Markdown' });
   }
 };
 
@@ -83,10 +68,10 @@ module.exports = async (req, res) => {
     const { message } = req.body;
     if (!message) return res.status(200).json({ ok: true });
 
-    const chatId = message.chat.id;
-    const userId = message.from.id;
+    const chatId   = message.chat.id;
+    const userId   = message.from.id;
     const firstName = message.from.first_name || 'Ambassador';
-    const text = message.text || '';
+    const text     = message.text || '';
 
     console.log(`[MORPHEUS] User ${userId} (${firstName}): ${text}`);
 
@@ -98,7 +83,8 @@ module.exports = async (req, res) => {
         await bot.sendMessage(chatId, '⚠️ Unknown command. Type /help for available commands.');
       }
     } else {
-      const result = await orchestrator.route(text, { chatId, userId, firstName });
+      // All free-text routes through Trinity intelligence → segment-aware routing
+      const result = await orchestrator.routeUser(userId, firstName, text);
       await bot.sendMessage(chatId, result.text, { parse_mode: 'Markdown' });
     }
 
