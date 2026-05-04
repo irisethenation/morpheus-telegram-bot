@@ -3,11 +3,13 @@
   "builds": [
     { "src": "api/webhook.js", "use": "@vercel/node" },
     { "src": "api/generate-site.js", "use": "@vercel/node" },
+    { "src": "api/leads.js", "use": "@vercel/node" },
     { "src": "public/**", "use": "@vercel/static" }
   ],
   "routes": [
     { "src": "/api/webhook", "dest": "api/webhook.js" },
     { "src": "/api/generate-site", "dest": "api/generate-site.js" },
+    { "src": "/api/leads", "dest": "api/leads.js" },
     { "src": "/preview/(.*)", "dest": "api/generate-site.js?business=$1" },
     { "src": "/(.*)", "dest": "public/$1" }
   ]
