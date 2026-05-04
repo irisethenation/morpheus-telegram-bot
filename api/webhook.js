@@ -6,6 +6,7 @@ const { get: getPayment } = require('./revenue/payments');
 const { SCRIPTS } = require('./revenue/outreach');
 const { init, addRevenue, getStatus, state } = require('./revenue/tracker');
 const { chat, isDolphin, clearHistory, MODELS } = require('./revenue/llm');
+const { sendEmail, buildOutreachEmail } = require('./revenue/resend');
 
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN_MORPHEUS;
 const MORPHEUS_URL = process.env.MORPHEUS_API_URL || 'http://51.79.29.15:19000';
@@ -293,6 +294,22 @@ Bundle: ${offer.bundle}
     await md(chatId, `✅ *Logged: £${amount.toLocaleString()} (${type})*\n\nTotal: £${s.total.toLocaleString()} / £${s.goal.toLocaleString()} (${s.pct}%)`);
   },
 
+  // ── OUTREACH LOG ─────────────────────────────────────────────────────────────
+
+  outreach_log: async (chatId) => {
+    try {
+      await bot.sendChatAction(chatId, 'typing');
+      // Ask morpheus_core for outreach stats — stored via OVH message API logs
+      const reply = await askMorpheus(
+        'OUTREACH_LOG_QUERY: Show all GEM outreach records — counts by status (sent, opened, clicked, bounced, skipped, pending_approval), and list last 10 emails with recipient, subject, status, timestamp.',
+        `outreach_log_${chatId}`
+      );
+      await md(chatId, `📊 *OUTREACH LOG*\n\n${reply}`);
+    } catch (e) {
+      await md(chatId, `📊 *OUTREACH LOG*\n\n_OVH unreachable — showing local session data_\n\nUse /revenue for campaign totals.`);
+    }
+  },
+
   // ── PAYMENTS ────────────────────────────────────────────────────────────────
 
   pay_uk: async (chatId) => {
@@ -509,11 +526,102 @@ const handleSession = async (chatId, userId, text) => {
 
 // ─── MAIN WEBHOOK ─────────────────────────────────────────────────────────────
 
+// ─── OUTREACH APPROVAL CALLBACKS ─────────────────────────────────────────────
+
+const handleCallbackQuery = async (query) => {
+  const chatId = query.message.chat.id;
+  const msgId  = query.message.message_id;
+  const data   = query.data || '';
+
+  // Parse: "action|email|name|biz"
+  const [action, email, name, biz] = data.split('|');
+
+  const ack = (text) => axios.post(
+    `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN_MORPHEUS}/answerCallbackQuery`,
+    { callback_query_id: query.id, text, show_alert: false },
+    { timeout: 5000 }
+  ).catch(() => {});
+
+  const editMsg = (newText) => axios.post(
+    `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN_MORPHEUS}/editMessageText`,
+    { chat_id: chatId, message_id: msgId, text: newText, parse_mode: 'Markdown' },
+    { timeout: 5000 }
+  ).catch(() => {});
+
+  if (action === 'a') {
+    // ── APPROVE: build and send the email ──────────────────────────────────
+    await ack('Sending email...');
+    try {
+      const pvUrl = previewUrl(biz || name);
+      const { subject, html, text: textBody } = buildOutreachEmail({
+        name, business: biz || name, previewUrl: pvUrl
+      });
+
+      const result = await sendEmail({
+        to: email,
+        subject,
+        html,
+        text: textBody,
+        replyTo: 'morpheus@gemtheagency.com',
+        tags: [{ name: 'campaign', value: 'gem-outreach' }, { name: 'type', value: 'website-outreach' }],
+      });
+
+      await editMsg(
+        `✅ *EMAIL SENT*\n\nTo: ${email}\nName: ${name}\nBusiness: ${biz || name}\nResend ID: \`${result.id}\`\n\n_You'll get a Telegram alert when they open it._`
+      );
+
+      // Log to OVH
+      axios.post(
+        `${MORPHEUS_URL}/api/morpheus/message`,
+        {
+          message: `OUTREACH_LOG: action=approved_and_sent email_id=${result.id} to=${email} name="${name}" business="${biz}" status=sent ts=${new Date().toISOString()}`,
+          session_id: `outreach_approved_${Date.now()}`,
+        },
+        { headers: morpheusHeaders(), timeout: 10000 }
+      ).catch(() => {});
+
+    } catch (err) {
+      await ack('Failed to send');
+      await editMsg(`❌ *SEND FAILED*\n\nTo: ${email}\nError: \`${err.message.slice(0, 120)}\`\n\nCheck RESEND\\_API\\_KEY in Vercel env vars.`);
+    }
+
+  } else if (action === 's') {
+    // ── SKIP ───────────────────────────────────────────────────────────────
+    await ack('Skipped');
+    await editMsg(`⏭ *SKIPPED*\n\nTo: ${email} (${name})\n\nNo email sent. Lead remains in morpheus\\_core for future outreach.`);
+
+    axios.post(
+      `${MORPHEUS_URL}/api/morpheus/message`,
+      { message: `OUTREACH_LOG: action=skipped to=${email} name="${name}" ts=${new Date().toISOString()}`, session_id: `outreach_skip_${Date.now()}` },
+      { headers: morpheusHeaders(), timeout: 8000 }
+    ).catch(() => {});
+
+  } else if (action === 't') {
+    // ── SCHEDULE TOMORROW ──────────────────────────────────────────────────
+    await ack('Scheduled for tomorrow');
+    await editMsg(`⏰ *SCHEDULED — TOMORROW*\n\nTo: ${email} (${name})\n\nI'll surface this again in 24 hours for approval.\n\n_Note: re-queue via /outreach\\_log when ready._`);
+
+    axios.post(
+      `${MORPHEUS_URL}/api/morpheus/message`,
+      { message: `OUTREACH_LOG: action=scheduled_24h to=${email} name="${name}" biz="${biz}" ts=${new Date().toISOString()}`, session_id: `outreach_sched_${Date.now()}` },
+      { headers: morpheusHeaders(), timeout: 8000 }
+    ).catch(() => {});
+  }
+};
+
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(200).json({ status: 'Morpheus OVH webhook active', api: MORPHEUS_URL });
 
   try {
-    const { message } = req.body;
+    const body = req.body;
+
+    // ── Inline button callback ──────────────────────────────────────────────
+    if (body?.callback_query) {
+      await handleCallbackQuery(body.callback_query);
+      return res.status(200).json({ ok: true });
+    }
+
+    const { message } = body;
     if (!message) return res.status(200).json({ ok: true });
 
     const chatId = message.chat.id;
@@ -547,6 +655,8 @@ module.exports = async (req, res) => {
         revenue: () => cmd.revenue(chatId),
         tracker: () => cmd.revenue(chatId),
         log_revenue: () => cmd.log_revenue(chatId, args),
+        outreach_log: () => cmd.outreach_log(chatId),
+        sent: () => cmd.outreach_log(chatId),
         pay_uk: () => cmd.pay_uk(chatId),
         pay_us: () => cmd.pay_us(chatId),
         trust: () => cmd.trust(chatId),

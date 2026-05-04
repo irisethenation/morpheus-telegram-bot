@@ -1,63 +1,86 @@
 const axios = require('axios');
+const { previewUrl } = require('./revenue/websites');
+const { buildOutreachEmail } = require('./revenue/resend');
 
 const MORPHEUS_URL = process.env.MORPHEUS_API_URL || 'http://51.79.29.15:19000';
 const MORPHEUS_KEY = process.env.MORPHEUS_API_KEY;
-const TRINITY_CHAT_ID = process.env.TRINITY_ADMIN_CHAT_ID;
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN_MORPHEUS;
+const ADMIN_CHAT_ID = process.env.TRINITY_ADMIN_CHAT_ID;
 
-const headers = () => ({ 'X-API-Key': MORPHEUS_KEY, 'Content-Type': 'application/json' });
+const ovhHeaders = () => ({ 'X-API-Key': MORPHEUS_KEY, 'Content-Type': 'application/json' });
 
-const notifyTelegram = async (text) => {
-  if (!BOT_TOKEN || !TRINITY_CHAT_ID) return;
-  await axios.post(
-    `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
-    { chat_id: TRINITY_CHAT_ID, text, parse_mode: 'Markdown' },
-    { timeout: 8000 }
-  ).catch(() => {});
+// Encode minimal lead data into Telegram callback_data (max 64 bytes)
+// Format: "a|email|name|biz" — truncated to fit, separator is |
+const encodeCallback = (action, email, name, biz) => {
+  const safe = s => s.replace(/\|/g, '').replace(/\s+/g, ' ').trim();
+  const e = safe(email).substring(0, 36);
+  const n = safe(name).substring(0, 10);
+  const b = safe(biz || '').substring(0, 10);
+  return `${action}|${e}|${n}|${b}`;
 };
 
-const storeLead = async (lead) => {
-  const message = [
-    `NEW GEM LEAD — ${new Date().toISOString()}`,
-    `Name: ${lead.name}`,
-    `Business: ${lead.business}`,
-    `Email: ${lead.email}`,
-    `Phone: ${lead.phone}`,
-    `Industry: ${lead.industry}`,
-    `Bottleneck: ${lead.bottleneck}`,
-    `Source: gemtheagency.com/contact-form`,
-  ].join('\n');
+const sendTelegramApproval = async (lead, emailPreview) => {
+  if (!BOT_TOKEN || !ADMIN_CHAT_ID) return;
 
-  // Log to Morpheus core via message API (Trinity will pick up and outreach)
+  const { name, business, email, phone, industry, bottleneck } = lead;
+  const pvUrl = previewUrl(business || name);
+
+  const text = [
+    `🔍 *NEW LEAD — APPROVAL REQUIRED*`,
+    ``,
+    `👤 ${name}${business ? `  ·  ${business}` : ''}`,
+    `🏢 ${industry}`,
+    `📧 ${email}`,
+    phone ? `📱 ${phone}` : null,
+    bottleneck ? `\n💬 _"${bottleneck}"_` : null,
+    ``,
+    `─────────────────────────`,
+    `📨 *DRAFT EMAIL*`,
+    `To: ${email}`,
+    `Subject: ${emailPreview.subject}`,
+    `Preview URL: ${pvUrl}`,
+    `─────────────────────────`,
+    ``,
+    `Tap ✅ to send this email now, or ❌ to skip.`,
+  ].filter(l => l !== null).join('\n');
+
+  const inline_keyboard = [[
+    { text: '✅ Approve & Send', callback_data: encodeCallback('a', email, name, business || name) },
+    { text: '❌ Skip',           callback_data: encodeCallback('s', email, name, business || name) },
+    { text: '⏰ Send Tomorrow',  callback_data: encodeCallback('t', email, name, business || name) },
+  ]];
+
   await axios.post(
-    `${MORPHEUS_URL}/api/morpheus/message`,
+    `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
     {
-      message: `TRINITY_LEAD_INTAKE: ${message}`,
-      session_id: `gem_lead_${Date.now()}`,
-      context: { type: 'gem_website_lead', lead }
+      chat_id: ADMIN_CHAT_ID,
+      text,
+      parse_mode: 'Markdown',
+      reply_markup: { inline_keyboard },
     },
-    { headers: headers(), timeout: 20000 }
+    { timeout: 10000 }
   );
 };
 
-const runOutreachSkill = async (lead) => {
-  // Attempt to run Trinity's outreach skill if available on OVH
+const logToOvh = async (lead) => {
+  const msg = [
+    `GEM_LEAD_RECEIVED:`,
+    `name=${lead.name}`,
+    `business=${lead.business || ''}`,
+    `email=${lead.email}`,
+    `phone=${lead.phone || ''}`,
+    `industry=${lead.industry}`,
+    `bottleneck=${lead.bottleneck || ''}`,
+    `source=gemtheagency.com`,
+    `status=pending_approval`,
+    `ts=${new Date().toISOString()}`,
+  ].join(' ');
+
   await axios.post(
-    `${MORPHEUS_URL}/skills/run`,
-    {
-      name: 'trinity_outreach',
-      payload: {
-        type: 'gem_lead_follow_up',
-        contact: { name: lead.name, email: lead.email, phone: lead.phone },
-        business: lead.business,
-        industry: lead.industry,
-        priority: 'high',
-        script: 'website_outreach',
-        follow_up_hours: 2
-      }
-    },
-    { headers: headers(), timeout: 15000 }
-  ).catch(() => {}); // Non-fatal — skill may not exist yet on OVH
+    `${MORPHEUS_URL}/api/morpheus/message`,
+    { message: msg, session_id: `gem_lead_${Date.now()}`, context: { type: 'gem_lead', ...lead } },
+    { headers: ovhHeaders(), timeout: 15000 }
+  );
 };
 
 module.exports = async (req, res) => {
@@ -75,31 +98,15 @@ module.exports = async (req, res) => {
   }
 
   const lead = { name, business: business || '', email, phone: phone || '', industry, bottleneck: bottleneck || '' };
+  const pvUrl = previewUrl(business || name);
+  const emailPreview = buildOutreachEmail({ name, business: business || name, previewUrl: pvUrl });
 
-  try {
-    // Fire-and-forget to OVH — don't block the response on it
-    const ovhPromise = storeLead(lead).catch(() => {});
-    const skillPromise = runOutreachSkill(lead).catch(() => {});
+  // Always respond to the user immediately — never block on backend ops
+  res.status(200).json({ ok: true, message: "Request received — we'll be in touch within 2 hours" });
 
-    // Telegram alert to admin — immediate notification of new lead
-    const tgAlert = notifyTelegram([
-      `🔥 *NEW GEM LEAD*`,
-      `Name: ${name}`,
-      `Business: ${business || '—'}`,
-      `Industry: ${industry}`,
-      `Email: ${email}`,
-      `Phone: ${phone || '—'}`,
-      `Bottleneck: ${bottleneck || '—'}`,
-      `\n_Respond within 2 hours_`,
-    ].join('\n'));
-
-    await Promise.allSettled([ovhPromise, skillPromise, tgAlert]);
-
-    return res.status(200).json({ ok: true, message: 'Lead received — we\'ll be in touch within 2 hours' });
-
-  } catch (err) {
-    console.error('Lead submission error:', err.message);
-    // Still return success to the user — lead notification may have partially worked
-    return res.status(200).json({ ok: true, message: 'Request received' });
-  }
+  // Background: log to OVH + send Telegram approval card
+  await Promise.allSettled([
+    logToOvh(lead).catch(() => {}),
+    sendTelegramApproval(lead, emailPreview).catch(() => {}),
+  ]);
 };
