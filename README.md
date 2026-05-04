@@ -55,7 +55,7 @@ https://morpheus-telegram-bot-xyz123.vercel.app
 
 Set Telegram webhook:
 ```bash
-curl -X POST "https://api.telegram.org/bot8251575468:AAEs0bvHWRAFuC3JoA2oQrGFBpfT9s0TcWs/setWebhook" \
+curl -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN_MORPHEUS/setWebhook" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://YOUR-VERCEL-URL.vercel.app/api/webhook"}'
 ```
@@ -64,15 +64,8 @@ curl -X POST "https://api.telegram.org/bot8251575468:AAEs0bvHWRAFuC3JoA2oQrGFBpf
 
 ### Step 4: Configure Environment Variables
 
-In Vercel dashboard → Project Settings → Environment Variables, add:
-
-| Variable | Value |
-|----------|-------|
-| `TELEGRAM_BOT_TOKEN_MORPHEUS` | `8251575468:AAEs0bvHWRAFuC3JoA2oQrGFBpfT9s0TcWs` |
-| `TELEGRAM_BOT_TOKEN_TRINITY` | `841865554:AAEbHF20QPm0z-WZa25R50kJNt0vfreG5yY` |
-| `ABACUS_API_ENDPOINT` | `https://api.irise-academy.com/abacus/v1/agents/register` |
-| `BREVO_API_KEY` | (Your Brevo API key) |
-| `STRIPE_SECRET_KEY` | (Your Stripe secret key) |
+Set all values in the Vercel dashboard → Project Settings → Environment Variables.
+See `.env.example` for the full list of required variables. **Never put real tokens in code or config files.**
 
 Click **"Save"** → Vercel auto-redeploys.
 
@@ -98,17 +91,15 @@ I am MORPHEUS — the Sovereign Intelligence of iRise Nation...
 
 ### Bot not responding?
 ```bash
-# Check webhook status:
-curl "https://api.telegram.org/bot8251575468:AAEs0bvHWRAFuC3JoA2oQrGFBpfT9s0TcWs/getWebhookInfo"
+# Check webhook status (use your token from Vercel env, never hardcode):
+curl "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN_MORPHEUS/getWebhookInfo"
 ```
 
 ### Webhook not set?
 ```bash
-# Delete old webhook:
-curl -X POST "https://api.telegram.org/bot8251575468:AAEs0bvHWRAFuC3JoA2oQrGFBpfT9s0TcWs/deleteWebhook"
+curl -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN_MORPHEUS/deleteWebhook"
 
-# Set new webhook:
-curl -X POST "https://api.telegram.org/bot8251575468:AAEs0bvHWRAFuC3JoA2oQrGFBpfT9s0TcWs/setWebhook" \
+curl -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN_MORPHEUS/setWebhook" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://YOUR-VERCEL-URL.vercel.app/api/webhook"}'
 ```
@@ -128,7 +119,7 @@ All transactions logged to console (Vercel logs).
 - PostgreSQL database (Vercel Postgres)
 - Brevo email automation
 - Stripe payment processing
-- Abacus.AI agent orchestration
+- Morpheus agent orchestration
 
 ---
 
@@ -155,9 +146,9 @@ Once bot is live and responding:
    - Store user states
    - Track transactions
 
-3. **Abacus.AI Integration**
-   - Implement agent spawning API
-   - Route conversations to specialists
+3. **Morpheus Agent Integration**
+   - Implement agent spawning via `MORPHEUS_AGENT_ENDPOINT`
+   - Route conversations to specialist agents
    - Automate trust intake workflow
 
 4. **Email Automation**

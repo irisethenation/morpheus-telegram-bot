@@ -1,6 +1,6 @@
 /**
  * MORPHEUS TELEGRAM BOT - Vercel Serverless Webhook
- * Handles all incoming Telegram messages and routes to Abacus.AI agents
+ * Handles all incoming Telegram messages and routes to Morpheus agents
  */
 
 const TelegramBot = require('node-telegram-bot-api');
@@ -10,7 +10,7 @@ const { v4: uuidv4 } = require('uuid');
 // Environment Configuration
 const MORPHEUS_TOKEN = process.env.TELEGRAM_BOT_TOKEN_MORPHEUS;
 const TRINITY_TOKEN = process.env.TELEGRAM_BOT_TOKEN_TRINITY;
-const ABACUS_ENDPOINT = process.env.ABACUS_API_ENDPOINT;
+const MORPHEUS_AGENT_ENDPOINT = process.env.MORPHEUS_AGENT_ENDPOINT;
 
 // Initialize bot (webhook mode for Vercel)
 const bot = new TelegramBot(MORPHEUS_TOKEN);
@@ -177,7 +177,7 @@ Questions: Ask me anything
   },
 
   intake: async (chatId, userId, firstName) => {
-    // Spawn TrustAgent via Abacus.AI
+    // Spawn TrustAgent via Morpheus agent endpoint
     const agentPayload = {
       agent_uuid: uuidv4(),
       agent_type: "TrustAgent",
@@ -190,8 +190,7 @@ Questions: Ask me anything
     };
     
     try {
-      // Route to Abacus.AI (simulated for now - implement actual API call)
-      console.log('[ABACUS SPAWN]', agentPayload);
+      console.log('[MORPHEUS SPAWN]', agentPayload);
       
       const intakeMessage = `
 🔷 **Trust Intake Interview Initiated**
@@ -291,7 +290,7 @@ module.exports = async (req, res) => {
         await bot.sendMessage(chatId, '⚠️ Unknown command. Type /help for available commands.');
       }
     } else {
-      // Natural language processing (route to Abacus.AI agents)
+      // Natural language processing (route to Morpheus agents)
       const lowercaseText = text.toLowerCase();
       
       if (lowercaseText.includes('trust') || lowercaseText.includes('estate')) {
