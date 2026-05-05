@@ -1,0 +1,78 @@
+version: '3.9'
+
+services:
+  morpheus:
+    build: .
+    container_name: morpheus-os
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOST: 0.0.0.0
+      PG_HOST: postgres
+      PG_PORT: 5432
+      PG_DATABASE: morpheus
+      PG_USER: morpheus
+      PG_PASSWORD: ${PG_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      TELEGRAM_BOT_TOKEN_MORPHEUS: ${TELEGRAM_BOT_TOKEN_MORPHEUS}
+      TELEGRAM_BOT_TOKEN_TRINITY: ${TELEGRAM_BOT_TOKEN_TRINITY}
+      INTERNAL_API_SECRET: ${INTERNAL_API_SECRET}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      BREVO_API_KEY: ${BREVO_API_KEY}
+      WEPAY_CASH_ORIGIN: ${WEPAY_CASH_ORIGIN}
+      GEM_AGENCY_ORIGIN: ${GEM_AGENCY_ORIGIN}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - morpheus-net
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: morpheus-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: morpheus
+      POSTGRES_USER: morpheus
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations/001_initial.sql:/docker-entrypoint-initdb.d/001_initial.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U morpheus']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - morpheus-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: morpheus-redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - morpheus-net
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  morpheus-net:
+    driver: bridge
