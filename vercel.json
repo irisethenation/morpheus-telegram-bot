@@ -1,18 +1,26 @@
 {
   "version": 2,
   "builds": [
-    { "src": "api/webhook.js", "use": "@vercel/node" },
+    { "src": "api/webhook.js",       "use": "@vercel/node" },
     { "src": "api/generate-site.js", "use": "@vercel/node" },
-    { "src": "api/leads.js", "use": "@vercel/node" },
+    { "src": "api/leads.js",         "use": "@vercel/node" },
     { "src": "api/resend-events.js", "use": "@vercel/node" },
-    { "src": "public/**", "use": "@vercel/static" }
+    { "src": "api/invoice.js",       "use": "@vercel/node" },
+    { "src": "api/tide-webhook.js",  "use": "@vercel/node" },
+    { "src": "api/stripe-webhook.js","use": "@vercel/node" },
+    { "src": "api/crypto-webhook.js","use": "@vercel/node" },
+    { "src": "public/**",            "use": "@vercel/static" }
   ],
   "routes": [
-    { "src": "/api/webhook", "dest": "api/webhook.js" },
-    { "src": "/api/generate-site", "dest": "api/generate-site.js" },
-    { "src": "/api/leads", "dest": "api/leads.js" },
-    { "src": "/api/resend-events", "dest": "api/resend-events.js" },
-    { "src": "/preview/(.*)", "dest": "api/generate-site.js?business=$1" },
-    { "src": "/(.*)", "dest": "public/$1" }
+    { "src": "/api/webhook",         "dest": "api/webhook.js" },
+    { "src": "/api/generate-site",   "dest": "api/generate-site.js" },
+    { "src": "/api/leads",           "dest": "api/leads.js" },
+    { "src": "/api/resend-events",   "dest": "api/resend-events.js" },
+    { "src": "/api/invoice",         "dest": "api/invoice.js" },
+    { "src": "/api/tide-webhook",    "dest": "api/tide-webhook.js" },
+    { "src": "/api/stripe-webhook",  "dest": "api/stripe-webhook.js" },
+    { "src": "/api/crypto-webhook",  "dest": "api/crypto-webhook.js" },
+    { "src": "/preview/(.*)",        "dest": "api/generate-site.js?business=$1" },
+    { "src": "/(.*)",                "dest": "public/$1" }
   ]
 }

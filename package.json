@@ -10,7 +10,8 @@
   "dependencies": {
     "node-telegram-bot-api": "^0.64.0",
     "axios": "^1.6.2",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "pg": "^8.11.3"
   },
   "engines": {
     "node": ">=18.x"

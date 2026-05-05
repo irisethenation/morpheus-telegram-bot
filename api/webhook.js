@@ -7,6 +7,9 @@ const { SCRIPTS } = require('./revenue/outreach');
 const { init, addRevenue, getStatus, state } = require('./revenue/tracker');
 const { chat, isDolphin, clearHistory, MODELS } = require('./revenue/llm');
 const { sendEmail, buildOutreachEmail } = require('./revenue/resend');
+const { createInvoice, getInvoice, getInvoiceByReference, listPending, listAll } = require('./payments/invoiceService');
+const { emitEvent } = require('./payments/eventBus');
+const { processTransaction } = require('./payments/decisionEngine');
 
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN_MORPHEUS;
 const MORPHEUS_URL = process.env.MORPHEUS_API_URL || 'http://51.79.29.15:19000';
@@ -392,6 +395,103 @@ Protected under NDA Level 3 · GDPR compliant
 *Question 1:* What is your current country of residence?`);
   },
 
+  // ── INVOICE COMMANDS ──────────────────────────────────────────────────────
+
+  invoice: async (chatId, userId, args) => {
+    // /invoice <amount> [client name] [email]
+    // e.g. /invoice 2500 John Smith john@smith.com
+    if (!args) {
+      await md(chatId, `🧾 *CREATE INVOICE*\n\nUsage:\n\`/invoice [amount] [client name] [email]\`\n\nExamples:\n\`/invoice 2500\`\n\`/invoice 5500 John Smith john@smith.com\`\n\n/invoices — List all invoices\n/pending — List pending invoices`);
+      return;
+    }
+    const parts = args.split(' ');
+    const amount = parseFloat(parts[0]);
+    if (isNaN(amount) || amount <= 0) { await md(chatId, '⚠️ Invalid amount. Usage: `/invoice 2500 Client Name email@domain.com`'); return; }
+
+    // Parse optional name and email from remaining args
+    const emailRegex = /[^\s]+@[^\s]+\.[^\s]+/;
+    const emailMatch = args.match(emailRegex);
+    const client_email = emailMatch ? emailMatch[0] : null;
+    const nameStr = parts.slice(1).filter(p => !emailRegex.test(p)).join(' ') || null;
+
+    try {
+      const invoice = await createInvoice({ amount, currency: 'GBP', client_name: nameStr, client_email });
+      await emitEvent('invoice.created', invoice);
+      await md(chatId, `✅ *INVOICE CREATED*\n\n🔑 Reference: \`${invoice.reference}\`\n💰 Amount: £${Number(amount).toLocaleString()}\n${nameStr ? `👤 Client: ${nameStr}\n` : ''}${client_email ? `📧 ${client_email}\n` : ''}\n*Tell the client to use reference \`${invoice.reference}\` on their bank transfer.*`);
+    } catch (err) {
+      await md(chatId, `⚠️ DB error: \`${err.message.slice(0,120)}\`\n\nEnsure PAYMENT\\_DB\\_URL is set in Vercel env vars and migration has been run.`);
+    }
+  },
+
+  invoices: async (chatId) => {
+    try {
+      const rows = await listAll(15);
+      if (!rows.length) { await md(chatId, '📋 No invoices yet.'); return; }
+      const lines = rows.map(r => {
+        const sym = r.status === 'paid' ? '✅' : r.status === 'pending' ? '⏳' : '❌';
+        return `${sym} \`${r.reference}\` — £${Number(r.amount).toLocaleString()} — ${r.client_name || '—'} — ${r.status}`;
+      });
+      await md(chatId, `🧾 *INVOICES (last 15)*\n\n${lines.join('\n')}\n\n/pending — Pending only\n/invoice — Create new`);
+    } catch (err) {
+      await md(chatId, `⚠️ \`${err.message.slice(0,120)}\``);
+    }
+  },
+
+  pending: async (chatId) => {
+    try {
+      const rows = await listPending();
+      if (!rows.length) { await md(chatId, '✅ No pending invoices.'); return; }
+      const lines = rows.map(r => `⏳ \`${r.reference}\` — £${Number(r.amount).toLocaleString()} — ${r.client_name || '—'}`);
+      await md(chatId, `⏳ *PENDING INVOICES (${rows.length})*\n\n${lines.join('\n')}\n\nPending invoices are awaiting payment matching.`);
+    } catch (err) {
+      await md(chatId, `⚠️ \`${err.message.slice(0,120)}\``);
+    }
+  },
+
+  pay_status: async (chatId, args) => {
+    // /pay_status IRISE-A83F91C2
+    if (!args) { await md(chatId, '⚠️ Usage: `/pay_status IRISE-XXXXXXXX`'); return; }
+    try {
+      const inv = await getInvoiceByReference(args.trim().toUpperCase());
+      if (!inv) { await md(chatId, `❌ No invoice found for reference \`${args.trim().toUpperCase()}\``); return; }
+      const sym = inv.status === 'paid' ? '✅' : inv.status === 'pending' ? '⏳' : '❌';
+      await md(chatId, `${sym} *INVOICE STATUS*\n\nReference: \`${inv.reference}\`\nAmount: £${Number(inv.amount).toLocaleString()} ${inv.currency}\nStatus: *${inv.status.toUpperCase()}*\n${inv.client_name ? `Client: ${inv.client_name}\n` : ''}${inv.paid_at ? `Paid at: ${new Date(inv.paid_at).toLocaleString('en-GB')}\n` : ''}Created: ${new Date(inv.created_at).toLocaleString('en-GB')}`);
+    } catch (err) {
+      await md(chatId, `⚠️ \`${err.message.slice(0,120)}\``);
+    }
+  },
+
+  // Manual payment logging — for testing or fallback when webhook isn't set up yet
+  log_payment: async (chatId, args) => {
+    // /log_payment <amount> <reference>
+    // e.g. /log_payment 2500 IRISE-A83F91C2
+    if (!args) { await md(chatId, '⚠️ Usage: `/log_payment [amount] [reference]`\ne.g. `/log_payment 2500 IRISE-A83F91C2`'); return; }
+    const [amtStr, ref, ...nameParts] = args.split(' ');
+    const amount = parseFloat(amtStr);
+    if (isNaN(amount) || !ref) { await md(chatId, '⚠️ Need amount and reference. e.g. `/log_payment 2500 IRISE-A83F91C2`'); return; }
+    const tx = {
+      id:          `manual_${Date.now()}`,
+      provider:    'manual',
+      amount,
+      currency:    'GBP',
+      reference:   ref.toUpperCase().trim(),
+      sender_name: nameParts.join(' ') || null,
+      raw:         { manual: true, logged_by: chatId },
+    };
+    try {
+      const result = await processTransaction(tx);
+      if (result.status === 'matched') {
+        await md(chatId, `✅ *PAYMENT MATCHED*\n\nInvoice: \`${result.invoice_id}\`\nConfidence: ${result.confidence}%\n\nRevenue locked. Agents triggered.`);
+      } else if (result.status === 'unmatched') {
+        await md(chatId, `⚠️ *NO MATCH FOUND*\n\nPayment of £${amount.toLocaleString()} stored but no pending invoice matched reference \`${ref}\`.\n\nCheck /pending for open invoices.`);
+      } else if (result.status === 'duplicate') {
+        await md(chatId, `🔄 Transaction already processed — duplicate blocked.`);
+      }
+    } catch (err) {
+      await md(chatId, `⚠️ \`${err.message.slice(0,120)}\`\n\nCheck PAYMENT\\_DB\\_URL in Vercel env vars.`);
+    }
+  },
+
   help: async (chatId) => md(chatId, `
 🔷 *MORPHEUS — FULL REFERENCE*
 OVH: \`51.79.29.15:19000\`
@@ -400,8 +500,14 @@ OVH: \`51.79.29.15:19000\`
 /property · /wepaycash · /dealpack · /buyer
 /websites · /preview [name] · /outreach
 /revenue · /log\\_revenue [amt] [type]
+/outreach\\_log — Email send history
 
-*PAYMENTS:*
+*INVOICE & PAYMENTS:*
+/invoice [amt] [name] [email] — Create invoice
+/invoices — List all invoices
+/pending — Pending invoices
+/pay\\_status [ref] — Check invoice status
+/log\\_payment [amt] [ref] — Manual payment match
 /pay\\_uk (Tide) · /pay\\_us (Mercury)
 
 *iRISE:*
@@ -657,9 +763,14 @@ module.exports = async (req, res) => {
         log_revenue: () => cmd.log_revenue(chatId, args),
         outreach_log: () => cmd.outreach_log(chatId),
         sent: () => cmd.outreach_log(chatId),
-        pay_uk: () => cmd.pay_uk(chatId),
-        pay_us: () => cmd.pay_us(chatId),
-        trust: () => cmd.trust(chatId),
+        invoice:     () => cmd.invoice(chatId, userId, args),
+        invoices:    () => cmd.invoices(chatId),
+        pending:     () => cmd.pending(chatId),
+        pay_status:  () => cmd.pay_status(chatId, args),
+        log_payment: () => cmd.log_payment(chatId, args),
+        pay_uk:      () => cmd.pay_uk(chatId),
+        pay_us:      () => cmd.pay_us(chatId),
+        trust:       () => cmd.trust(chatId),
         academy: () => cmd.academy(chatId),
         pricing: () => cmd.pricing(chatId),
         intake: () => cmd.intake(chatId, userId, firstName),
