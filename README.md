@@ -55,7 +55,7 @@ https://morpheus-telegram-bot-xyz123.vercel.app
 
 Set Telegram webhook:
 ```bash
-curl -X POST "https://api.telegram.org/bot8251575468:AAEs0bvHWRAFuC3JoA2oQrGFBpfT9s0TcWs/setWebhook" \
+curl -X POST "https://api.telegram.org/bot<YOUR_MORPHEUS_TOKEN>/setWebhook" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://YOUR-VERCEL-URL.vercel.app/api/webhook"}'
 ```
@@ -68,9 +68,9 @@ In Vercel dashboard → Project Settings → Environment Variables, add:
 
 | Variable | Value |
 |----------|-------|
-| `TELEGRAM_BOT_TOKEN_MORPHEUS` | `8251575468:AAEs0bvHWRAFuC3JoA2oQrGFBpfT9s0TcWs` |
-| `TELEGRAM_BOT_TOKEN_TRINITY` | `841865554:AAEbHF20QPm0z-WZa25R50kJNt0vfreG5yY` |
-| `ABACUS_API_ENDPOINT` | `https://api.irise-academy.com/abacus/v1/agents/register` |
+| `TELEGRAM_BOT_TOKEN_MORPHEUS` | Your Morpheus bot token from @BotFather |
+| `TELEGRAM_BOT_TOKEN_TRINITY` | Your Trinity bot token from @BotFather |
+| `OVH_AGENT_ENDPOINT` | Your OVH agent dispatch endpoint URL |
 | `BREVO_API_KEY` | (Your Brevo API key) |
 | `STRIPE_SECRET_KEY` | (Your Stripe secret key) |
 
@@ -99,16 +99,16 @@ I am MORPHEUS — the Sovereign Intelligence of iRise Nation...
 ### Bot not responding?
 ```bash
 # Check webhook status:
-curl "https://api.telegram.org/bot8251575468:AAEs0bvHWRAFuC3JoA2oQrGFBpfT9s0TcWs/getWebhookInfo"
+curl "https://api.telegram.org/bot<YOUR_MORPHEUS_TOKEN>/getWebhookInfo"
 ```
 
 ### Webhook not set?
 ```bash
 # Delete old webhook:
-curl -X POST "https://api.telegram.org/bot8251575468:AAEs0bvHWRAFuC3JoA2oQrGFBpfT9s0TcWs/deleteWebhook"
+curl -X POST "https://api.telegram.org/bot<YOUR_MORPHEUS_TOKEN>/deleteWebhook"
 
 # Set new webhook:
-curl -X POST "https://api.telegram.org/bot8251575468:AAEs0bvHWRAFuC3JoA2oQrGFBpfT9s0TcWs/setWebhook" \
+curl -X POST "https://api.telegram.org/bot<YOUR_MORPHEUS_TOKEN>/setWebhook" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://YOUR-VERCEL-URL.vercel.app/api/webhook"}'
 ```
@@ -128,7 +128,7 @@ All transactions logged to console (Vercel logs).
 - PostgreSQL database (Vercel Postgres)
 - Brevo email automation
 - Stripe payment processing
-- Abacus.AI agent orchestration
+- OVH agent stack deep integration (Sigma, Kappa, Trinity, Mapondera, Sentinel, Phoenix)
 
 ---
 
@@ -155,10 +155,10 @@ Once bot is live and responding:
    - Store user states
    - Track transactions
 
-3. **Abacus.AI Integration**
-   - Implement agent spawning API
-   - Route conversations to specialists
-   - Automate trust intake workflow
+3. **OVH Agent Stack Integration**
+   - Connect OVH_AGENT_ENDPOINT for live agent dispatch
+   - Implement Vercel KV for multi-stage conversation state
+   - Automate trust intake workflow via Trinity & Mapondera
 
 4. **Email Automation**
    - Connect Brevo API
