@@ -17,10 +17,12 @@ fastify.register(require('@fastify/rate-limit'), {
 });
 
 // Routes
-fastify.register(require('./routes/webhook'), { prefix: '/api/agent' });
-fastify.register(require('./routes/leads'),   { prefix: '/api/leads' });
-fastify.register(require('./routes/events'),  { prefix: '/api/events' });
-fastify.register(require('./routes/agents'),  { prefix: '/api/agents' });
-fastify.register(require('./routes/status'),  { prefix: '/api' });
+fastify.register(require('./routes/webhook'),  { prefix: '/api/agent' });
+fastify.register(require('./routes/leads'),    { prefix: '/api/leads' });
+fastify.register(require('./routes/events'),   { prefix: '/api/events' });
+fastify.register(require('./routes/agents'),   { prefix: '/api/agents' });
+fastify.register(require('./routes/pipeline'), { prefix: '/api/pipeline' });
+fastify.register(require('./routes/kpi'),      { prefix: '/api/kpi' });
+fastify.register(require('./routes/status'),   { prefix: '/api' });
 
 module.exports = fastify;

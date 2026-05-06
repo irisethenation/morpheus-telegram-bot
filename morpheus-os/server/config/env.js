@@ -39,13 +39,26 @@ module.exports = {
     internalSecret: optional('INTERNAL_API_SECRET', 'dev-secret-change-in-production')
   },
   stripe: {
-    secretKey: optional('STRIPE_SECRET_KEY')
+    secretKey:     optional('STRIPE_SECRET_KEY'),
+    webhookSecret: optional('STRIPE_WEBHOOK_SECRET')
   },
   brevo: {
     apiKey: optional('BREVO_API_KEY')
   },
+  twilio: {
+    accountSid:  optional('TWILIO_ACCOUNT_SID'),
+    authToken:   optional('TWILIO_AUTH_TOKEN'),
+    fromNumber:  optional('TWILIO_FROM_NUMBER')
+  },
+  vapi: {
+    apiKey:        optional('VAPI_API_KEY'),
+    phoneNumberId: optional('VAPI_PHONE_NUMBER_ID')
+  },
+  propertyComps: {
+    apiKey: optional('PROPERTY_COMPS_API_KEY')
+  },
   origins: {
-    wepayCash:  optional('WEPAY_CASH_ORIGIN',  'https://wepaycash.co.uk'),
-    gemAgency:  optional('GEM_AGENCY_ORIGIN',   'https://gemagency.co.uk')
+    wepayCash: optional('WEPAY_CASH_ORIGIN', 'https://wepaycash.co.uk'),
+    gemAgency: optional('GEM_AGENCY_ORIGIN', 'https://gemagency.co.uk')
   }
 };
