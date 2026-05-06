@@ -43,7 +43,25 @@ module.exports = {
     webhookSecret: optional('STRIPE_WEBHOOK_SECRET')
   },
   brevo: {
-    apiKey: optional('BREVO_API_KEY')
+    apiKey:     optional('BREVO_API_KEY'),
+    fromEmail:  optional('BREVO_FROM_EMAIL', 'no-reply@irise.nation'),
+    templates: {
+      welcome:             optional('BREVO_TPL_WELCOME'),
+      intakeConfirmation:  optional('BREVO_TPL_INTAKE'),
+      paymentConfirmation: optional('BREVO_TPL_PAYMENT'),
+      enrollmentAccess:    optional('BREVO_TPL_ENROLLMENT'),
+      followUp:            optional('BREVO_TPL_FOLLOW_UP'),
+      upsell:              optional('BREVO_TPL_UPSELL')
+    },
+    lists: {
+      allContacts: optional('BREVO_LIST_ALL')  ? parseInt(optional('BREVO_LIST_ALL'))  : null,
+      clients:     optional('BREVO_LIST_CLIENTS') ? parseInt(optional('BREVO_LIST_CLIENTS')) : null,
+      academy:     optional('BREVO_LIST_ACADEMY') ? parseInt(optional('BREVO_LIST_ACADEMY')) : null
+    }
+  },
+  crm: {
+    webhookUrl:    optional('CRM_WEBHOOK_URL'),
+    webhookSecret: optional('CRM_WEBHOOK_SECRET')
   },
   twilio: {
     accountSid:  optional('TWILIO_ACCOUNT_SID'),
