@@ -41,6 +41,19 @@ class BaseAgent {
         result
       });
 
+      // Push result back to the Telegram user who triggered the task
+      if (chat_id && result) {
+        const text = this._formatForTelegram(result, task_type);
+        if (text) {
+          await eventBus.publish(CHANNELS.TELEGRAM_SEND, {
+            chat_id,
+            text,
+            bot:        this.telegramBot || 'morpheus',
+            parse_mode: 'Markdown'
+          });
+        }
+      }
+
       return result;
 
     } catch (err) {
@@ -73,6 +86,33 @@ class BaseAgent {
       tier:      this.tier,
       maxTokens
     });
+  }
+
+  // Format agent result into a Telegram-safe message string.
+  // Returns null if the task type should not echo back to the user
+  // (e.g. internal engine tasks dispatched with chat_id = 0).
+  _formatForTelegram(result, taskType) {
+    // Engine/scheduler tasks have no real user to notify
+    const internalTasks = [
+      'system_health', 'kpi_review', 'learn_and_suggest', 'lead_analysis',
+      'revenue_summary', 'system_alert', 'estate_review_standby',
+      'portal_access_check', 'enrollment_start'
+    ];
+    if (internalTasks.includes(taskType)) return null;
+
+    if (typeof result === 'string' && result.trim()) return result;
+
+    if (result && typeof result === 'object') {
+      // Intake stage responses
+      if (result.message) return result.message;
+      // Structured results — format as readable summary
+      const lines = Object.entries(result)
+        .filter(([k]) => !['stage', 'total_stages'].includes(k))
+        .map(([k, v]) => `*${k}:* ${typeof v === 'object' ? JSON.stringify(v) : v}`);
+      return lines.length ? lines.join('\n') : null;
+    }
+
+    return null;
   }
 }
 

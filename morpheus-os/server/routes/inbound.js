@@ -8,18 +8,20 @@
  *   POST /api/inbound/twilio/voice    — Call status callbacks
  *   POST /api/inbound/vapi            — VAPI call results
  *   POST /api/inbound/stripe          — Stripe payment events
+ *   POST /api/inbound/email           — Brevo inbound email (Patrick task injection)
  */
 
-const pipeline   = require('../pipeline/stageManager');
-const assets     = require('../memory/winningAssets');
-const crm        = require('../integrations/crm');
-const brevo      = require('../integrations/brevo');
-const stripeInt  = require('../integrations/stripe');
-const eventBus   = require('../services/eventBus');
+const pipeline     = require('../pipeline/stageManager');
+const assets       = require('../memory/winningAssets');
+const crm          = require('../integrations/crm');
+const brevo        = require('../integrations/brevo');
+const stripeInt    = require('../integrations/stripe');
+const eventBus     = require('../services/eventBus');
 const { CHANNELS } = require('../services/eventBus');
 const orchestrator = require('../agents/orchestrator');
-const leadModel  = require('../models/lead');
-const { query }  = require('../services/db');
+const emailParser  = require('../services/emailTaskParser');
+const leadModel    = require('../models/lead');
+const { query }    = require('../services/db');
 const { v4: uuidv4 } = require('uuid');
 
 async function inboundRoutes(fastify) {
@@ -213,6 +215,61 @@ async function inboundRoutes(fastify) {
       console.error('[STRIPE WEBHOOK]', err.message);
       return reply.code(400).send({ error: err.message });
     }
+  });
+
+  // ─── BREVO: Inbound email — Patrick task injection ─────────────────
+  // Brevo parses inbound emails and POSTs structured JSON to this endpoint.
+  // Only authorized senders (Patrick's three addresses) are processed.
+  fastify.post('/email', async (req, reply) => {
+    const {
+      From: from         = req.body?.from,
+      Subject: subject   = req.body?.subject   || '',
+      'plain-part': textBody = req.body?.text  || '',
+      'html-part':  htmlBody = req.body?.html  || '',
+      Attachments:  attachments = []
+    } = req.body || {};
+
+    console.log(`[INBOUND EMAIL] from=${from} subject=${subject}`);
+
+    const parsed = await emailParser.parse({ from, subject, textBody, htmlBody, attachments });
+
+    if (!parsed.authorized) {
+      console.warn(`[INBOUND EMAIL] Unauthorized sender: ${from}`);
+      return reply.code(200).send({ ok: false, reason: parsed.reason });
+    }
+
+    if (!parsed.dispatched) {
+      console.warn(`[INBOUND EMAIL] Could not parse task: ${parsed.reason}`);
+      return reply.code(200).send({ ok: false, reason: parsed.reason });
+    }
+
+    // Dispatch to agent orchestrator
+    await orchestrator.dispatch(parsed.dispatch);
+
+    // Send confirmation reply to Patrick via Brevo
+    try {
+      const replyTo = emailParser.AUTHORIZED_SENDERS.includes(
+        from?.match(/<(.+?)>/)?.[1]?.toLowerCase() || from?.toLowerCase()
+      ) ? from : null;
+
+      if (replyTo) {
+        await brevo.sendTransactional({
+          to:      replyTo,
+          subject: `Re: ${subject}`,
+          text:    parsed.replyMessage
+        });
+      }
+    } catch (emailErr) {
+      console.error('[INBOUND EMAIL] Reply send failed:', emailErr.message);
+    }
+
+    // Broadcast task to command centre
+    await eventBus.publish(CHANNELS.AGENT_TASK, {
+      ...parsed.dispatch,
+      source: 'email_injection'
+    });
+
+    return reply.send({ ok: true, agent: parsed.dispatch.agent, priority: parsed.priority });
   });
 
   // ─── Generic external event (for future integrations) ──────────────

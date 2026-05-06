@@ -1,9 +1,24 @@
 'use strict';
 
 const fastify = require('fastify')({ logger: true, trustProxy: true });
-const env = require('./config/env');
+const env     = require('./config/env');
 
-// Security & performance plugins
+// ─── Body parsing ──────────────────────────────────────────────────────
+// Capture rawBody on every request so Stripe webhook signature
+// verification works, while still giving req.body parsed JSON to all routes.
+fastify.addContentTypeParser('application/json', { parseAs: 'buffer' }, (req, body, done) => {
+  req.rawBody = body;
+  try {
+    done(null, JSON.parse(body.toString('utf8')));
+  } catch (e) {
+    done(e);
+  }
+});
+
+// Twilio posts form-encoded data — required for inbound SMS/voice routes
+fastify.register(require('@fastify/formbody'));
+
+// ─── Security & performance ────────────────────────────────────────────
 fastify.register(require('@fastify/helmet'));
 fastify.register(require('@fastify/cors'), {
   origin: [env.origins.wepayCash, env.origins.gemAgency],
@@ -16,7 +31,10 @@ fastify.register(require('@fastify/rate-limit'), {
   timeWindow: '1 minute'
 });
 
-// Routes — internal (agent-to-agent + command centre)
+// ─── Auth (x-internal-secret on all routes except /api/inbound + /api/health) ──
+fastify.register(require('./plugins/auth'));
+
+// ─── Routes — internal ─────────────────────────────────────────────────
 fastify.register(require('./routes/webhook'),  { prefix: '/api/agent' });
 fastify.register(require('./routes/leads'),    { prefix: '/api/leads' });
 fastify.register(require('./routes/events'),   { prefix: '/api/events' });
@@ -25,12 +43,7 @@ fastify.register(require('./routes/pipeline'), { prefix: '/api/pipeline' });
 fastify.register(require('./routes/kpi'),      { prefix: '/api/kpi' });
 fastify.register(require('./routes/status'),   { prefix: '/api' });
 
-// Routes — inbound callbacks (Twilio, VAPI, Stripe, external events)
-// Raw body parsing required for Stripe signature verification
-fastify.addContentTypeParser('application/json', { parseAs: 'buffer' }, (req, body, done) => {
-  req.rawBody = body;
-  try { done(null, JSON.parse(body)); } catch (e) { done(e); }
-});
+// ─── Routes — inbound webhooks (public, self-verifying) ────────────────
 fastify.register(require('./routes/inbound'), { prefix: '/api/inbound' });
 
 module.exports = fastify;

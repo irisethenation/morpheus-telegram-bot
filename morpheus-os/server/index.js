@@ -1,11 +1,12 @@
 'use strict';
 
-const app       = require('./app');
-const env       = require('./config/env');
-const db        = require('./services/db');
-const bus       = require('./services/eventBus');
-const sock      = require('./services/socketServer');
-const scheduler = require('./services/scheduler');
+const app            = require('./app');
+const env            = require('./config/env');
+const db             = require('./services/db');
+const bus            = require('./services/eventBus');
+const sock           = require('./services/socketServer');
+const scheduler      = require('./services/scheduler');
+const telegramSender = require('./services/telegramSender');
 const { init: initAgents } = require('./agents/morpheus');
 
 // Engine daily runners
@@ -20,8 +21,9 @@ async function start() {
     await db.connect();
     await bus.connect();
 
-    // Boot agents
+    // Boot agents + Telegram outbound sender
     initAgents();
+    telegramSender.init();
 
     // Register daily engine schedules (06:00 UTC daily)
     scheduler.register('agency-engine-daily',   '0 6 * * *', () => agencyEngine.run());
