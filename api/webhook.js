@@ -6,7 +6,8 @@ const { get: getPayment } = require('./revenue/payments');
 const { SCRIPTS } = require('./revenue/outreach');
 const { init, addRevenue, getStatus, state } = require('./revenue/tracker');
 const { chat, isDolphin, clearHistory, MODELS } = require('./revenue/llm');
-const { sendEmail, buildOutreachEmail } = require('./revenue/resend');
+const { sendEmail: resendSend, buildOutreachEmail } = require('./revenue/resend');
+const { sendEmail: amSend, listUnread, handleInboundReply } = require('./revenue/agentmail');
 const { createInvoice, getInvoice, getInvoiceByReference, listPending, listAll } = require('./payments/invoiceService');
 const { emitEvent } = require('./payments/eventBus');
 const { processTransaction } = require('./payments/decisionEngine');
@@ -302,14 +303,39 @@ Bundle: ${offer.bundle}
   outreach_log: async (chatId) => {
     try {
       await bot.sendChatAction(chatId, 'typing');
-      // Ask morpheus_core for outreach stats — stored via OVH message API logs
       const reply = await askMorpheus(
         'OUTREACH_LOG_QUERY: Show all GEM outreach records — counts by status (sent, opened, clicked, bounced, skipped, pending_approval), and list last 10 emails with recipient, subject, status, timestamp.',
         `outreach_log_${chatId}`
       );
       await md(chatId, `📊 *OUTREACH LOG*\n\n${reply}`);
     } catch (e) {
-      await md(chatId, `📊 *OUTREACH LOG*\n\n_OVH unreachable — showing local session data_\n\nUse /revenue for campaign totals.`);
+      await md(chatId, `📊 *OUTREACH LOG*\n\n_OVH unreachable — use /revenue for campaign totals._`);
+    }
+  },
+
+  // ── AGENTMAIL REPLY INBOX ─────────────────────────────────────────────────
+
+  replies: async (chatId) => {
+    try {
+      await bot.sendChatAction(chatId, 'typing');
+      const emails = await listUnread();
+      if (!emails.length) {
+        await md(chatId, `📩 *REPLIES*\n\nNo unread replies in the inbox.`);
+        return;
+      }
+      await md(chatId, `📩 *UNREAD REPLIES (${emails.length})*\n\nProcessing...`);
+      for (const email of emails.slice(0, 10)) {
+        await handleInboundReply(email);
+      }
+      if (emails.length > 10) {
+        await md(chatId, `_...and ${emails.length - 10} more. They'll be processed automatically via webhook._`);
+      }
+    } catch (err) {
+      if (err.message.includes('AGENTMAIL_API_KEY')) {
+        await md(chatId, `⚠️ *AGENTMAIL not configured*\n\nAdd \`AGENTMAIL_API_KEY\` to Vercel env vars.\nGet your key at agentmail.to`);
+      } else {
+        await md(chatId, `⚠️ \`${err.message.slice(0, 100)}\``);
+      }
     }
   },
 
@@ -762,7 +788,9 @@ module.exports = async (req, res) => {
         tracker: () => cmd.revenue(chatId),
         log_revenue: () => cmd.log_revenue(chatId, args),
         outreach_log: () => cmd.outreach_log(chatId),
-        sent: () => cmd.outreach_log(chatId),
+        sent:         () => cmd.outreach_log(chatId),
+        replies:      () => cmd.replies(chatId),
+        inbox:        () => cmd.replies(chatId),
         invoice:     () => cmd.invoice(chatId, userId, args),
         invoices:    () => cmd.invoices(chatId),
         pending:     () => cmd.pending(chatId),
