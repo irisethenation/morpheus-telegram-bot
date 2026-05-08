@@ -6,8 +6,13 @@ const { runOrchestrator }    = require('./orchestrator');
 const { query }              = require('./db');
 const { v4: uuid }           = require('uuid');
 
+// ─── PROVIDERS THAT BYPASS INVOICE MATCHING ───────────────────────────────────
+// Stars payments are pre-priced product purchases with no IRISE invoice ref.
+// GoCardless and all others go through the standard matcher.
+const DIRECT_REVENUE_PROVIDERS = new Set(['telegram_stars']);
+
 // ─── MAIN ENTRY POINT ─────────────────────────────────────────────────────────
-// Called by every payment webhook (Tide, Stripe, crypto).
+// Called by every payment webhook (Tide, Stripe, GoCardless, crypto, Stars).
 // tx shape: { id, provider, amount, currency, reference, sender_name, sender_ref, raw }
 
 const processTransaction = async (tx) => {
@@ -21,7 +26,12 @@ const processTransaction = async (tx) => {
   // ── 2. STORE RAW (idempotent) ──────────────────────────────────────────────
   await storeTransaction(tx);
 
-  // ── 3. MATCH ───────────────────────────────────────────────────────────────
+  // ── 3a. DIRECT REVENUE (Stars — no invoice to match) ──────────────────────
+  if (DIRECT_REVENUE_PROVIDERS.has(tx.provider)) {
+    return processDirectRevenue(tx);
+  }
+
+  // ── 3b. MATCH ─────────────────────────────────────────────────────────────
   const match = await matchTransaction(tx);
 
   if (!match) {
@@ -79,6 +89,32 @@ const processTransaction = async (tx) => {
   });
 
   return { status: 'matched', invoice_id: invoice.id, confidence };
+};
+
+// ─── DIRECT REVENUE (Telegram Stars) ─────────────────────────────────────────
+// No invoice matching — record revenue directly from product payload.
+const processDirectRevenue = async (tx) => {
+  const revenueId = uuid();
+
+  await query(
+    `INSERT INTO revenue (id, lead_id, invoice_id, transaction_id, total_value, currency)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [revenueId, null, null, tx.id, tx.amount, tx.currency]
+  );
+
+  await markProcessed(tx.id);
+
+  await emitEvent('payment.received', {
+    amount:      tx.amount,
+    currency:    tx.currency,
+    reference:   tx.reference,
+    invoice_id:  null,
+    confidence:  100,
+    match_type:  'direct',
+    client_name: tx.sender_name || 'Telegram User',
+  });
+
+  return { status: 'direct', provider: tx.provider, revenue_id: revenueId };
 };
 
 module.exports = { processTransaction };

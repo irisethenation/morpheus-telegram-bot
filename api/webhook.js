@@ -351,6 +351,27 @@ Bundle: ${offer.bundle}
     await md(chatId, `🇺🇸 *US PAYMENT DETAILS*\n\nEntity: *${p.entity}*\nBank: *${p.bank}*\n\n${p.reference}\n\n✅ Send proof of payment to confirm.\n\n_${p.note}_`);
   },
 
+  // ── TELEGRAM STARS ──────────────────────────────────────────────────────────
+
+  stars: async (chatId, args) => {
+    const products = Object.entries(STARS_PRODUCTS);
+    if (!args) {
+      const list = products.map(([key, p], i) =>
+        `${i + 1}. *${p.title}*\n   ⭐ ${p.amount} Stars — ${p.description}`
+      ).join('\n\n');
+      await md(chatId, `⭐ *TELEGRAM STARS — DIGITAL PRODUCTS*\n\n${list}\n\nReply with: \`/stars [number]\` to purchase\ne.g. \`/stars 1\` for Academy Starter`);
+      return;
+    }
+    const idx = parseInt(args.trim()) - 1;
+    const key = products[idx]?.[0];
+    if (!key) { await md(chatId, '⚠️ Invalid selection. Use `/stars` to see the list.'); return; }
+    try {
+      await sendStarsInvoice(chatId, key);
+    } catch (err) {
+      await md(chatId, `⚠️ Could not send Stars invoice: \`${err.message.slice(0,80)}\``);
+    }
+  },
+
   // ── iRISE SERVICES ──────────────────────────────────────────────────────────
 
   trust: async (chatId) => md(chatId, `
@@ -658,6 +679,79 @@ const handleSession = async (chatId, userId, text) => {
 
 // ─── MAIN WEBHOOK ─────────────────────────────────────────────────────────────
 
+// ─── TELEGRAM STARS PAYMENT HANDLER ──────────────────────────────────────────
+
+// Stars (XTR) — Telegram's in-app digital credits.
+// 1 Star ≈ £0.013 (varies). Used for digital goods / credits inside the bot.
+// Payment flow: bot.sendInvoice → user pays Stars → pre_checkout_query → successful_payment
+
+const STARS_PRODUCTS = {
+  academy_starter:  { title: 'iRise Academy — Starter',   description: 'Full course access: Property Fundamentals',    amount: 500,  label: 'Academy Starter'  },
+  academy_pro:      { title: 'iRise Academy — Pro',        description: 'Full course library + mentorship access',      amount: 1500, label: 'Academy Pro'       },
+  trust_foundation: { title: 'Foundational Trust Setup',   description: 'Trust documentation + delivery pack',          amount: 3000, label: 'Trust Foundation'  },
+  website_activate: { title: 'GEM Website Activation',     description: '48-hour AI website setup + lead automation',   amount: 2500, label: 'Website Activation'},
+  deal_analysis:    { title: 'Deal Analysis — 1 Property', description: 'Full ARV, rehab, ROI + offer price report',    amount: 300,  label: 'Deal Analysis'     },
+};
+
+const sendStarsInvoice = async (chatId, productKey) => {
+  const p = STARS_PRODUCTS[productKey];
+  if (!p) throw new Error(`Unknown product: ${productKey}`);
+
+  await axios.post(
+    `https://api.telegram.org/bot${TOKEN}/sendInvoice`,
+    {
+      chat_id:         chatId,
+      title:           p.title,
+      description:     p.description,
+      payload:         `stars_${productKey}_${Date.now()}`,
+      currency:        'XTR',  // Telegram Stars currency code
+      prices:          [{ label: p.label, amount: p.amount }],
+      // No provider_token for Stars (native Telegram payment)
+    },
+    { timeout: 10000 }
+  );
+};
+
+const handleStarsPayment = async (message) => {
+  const sp      = message.successful_payment;
+  const chatId  = message.chat.id;
+  const userId  = message.from.id;
+  const stars   = sp.total_amount;          // amount in Stars (XTR)
+  const payload = sp.invoice_payload || ''; // e.g. "stars_academy_pro_1746300000000"
+
+  console.log(`[STARS] Payment: ${stars} XTR from ${userId} | payload: ${payload}`);
+
+  // Acknowledge to user
+  await md(chatId, `✅ *Payment received — ${stars} Stars*\n\nThank you! Your access is being activated.\n\n_Morpheus is processing your order._`);
+
+  // Process through decision engine as a transaction
+  const tx = {
+    id:          sp.telegram_payment_charge_id || `stars_${Date.now()}`,
+    provider:    'telegram_stars',
+    amount:      stars,
+    currency:    'XTR',
+    reference:   payload.toUpperCase(),
+    sender_name: `${message.from.first_name || ''} ${message.from.last_name || ''}`.trim(),
+    sender_ref:  String(userId),
+    raw:         { ...sp, user_id: userId, chat_id: chatId },
+  };
+
+  await processTransaction(tx).catch(err =>
+    console.error('[STARS PROCESS ERROR]', err.message)
+  );
+
+  // Alert admin
+  await axios.post(
+    `https://api.telegram.org/bot${TOKEN}/sendMessage`,
+    {
+      chat_id:    process.env.TRINITY_ADMIN_CHAT_ID,
+      text:       `⭐ *STARS PAYMENT*\n\nFrom: ${message.from.first_name} (${userId})\nStars: ${stars} XTR\nProduct: \`${payload}\`\n\n_Order activated._`,
+      parse_mode: 'Markdown',
+    },
+    { timeout: 8000 }
+  ).catch(() => {});
+};
+
 // ─── OUTREACH APPROVAL CALLBACKS ─────────────────────────────────────────────
 
 const handleCallbackQuery = async (query) => {
@@ -747,6 +841,24 @@ module.exports = async (req, res) => {
   try {
     const body = req.body;
 
+    // ── Telegram Stars: pre-checkout (must answer within 10s) ───────────────
+    if (body?.pre_checkout_query) {
+      const pcq = body.pre_checkout_query;
+      // Always approve — we validate on successful_payment
+      await axios.post(
+        `https://api.telegram.org/bot${TOKEN}/answerPreCheckoutQuery`,
+        { pre_checkout_query_id: pcq.id, ok: true },
+        { timeout: 8000 }
+      ).catch(() => {});
+      return res.status(200).json({ ok: true });
+    }
+
+    // ── Telegram Stars: successful payment ──────────────────────────────────
+    if (body?.message?.successful_payment) {
+      await handleStarsPayment(body.message);
+      return res.status(200).json({ ok: true });
+    }
+
     // ── Inline button callback ──────────────────────────────────────────────
     if (body?.callback_query) {
       await handleCallbackQuery(body.callback_query);
@@ -791,6 +903,7 @@ module.exports = async (req, res) => {
         sent:         () => cmd.outreach_log(chatId),
         replies:      () => cmd.replies(chatId),
         inbox:        () => cmd.replies(chatId),
+        stars:       () => cmd.stars(chatId, args),
         invoice:     () => cmd.invoice(chatId, userId, args),
         invoices:    () => cmd.invoices(chatId),
         pending:     () => cmd.pending(chatId),

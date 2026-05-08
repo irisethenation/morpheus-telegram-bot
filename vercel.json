@@ -12,6 +12,7 @@
     { "src": "api/tide-webhook.js",      "use": "@vercel/node" },
     { "src": "api/stripe-webhook.js",    "use": "@vercel/node" },
     { "src": "api/crypto-webhook.js",    "use": "@vercel/node" },
+    { "src": "api/gocardless-webhook.js","use": "@vercel/node" },
     { "src": "public/**",                "use": "@vercel/static" }
   ],
   "routes": [
@@ -25,7 +26,8 @@
     { "src": "/api/agentmail-webhook",   "dest": "api/agentmail-webhook.js" },
     { "src": "/api/tide-webhook",        "dest": "api/tide-webhook.js" },
     { "src": "/api/stripe-webhook",      "dest": "api/stripe-webhook.js" },
-    { "src": "/api/crypto-webhook",      "dest": "api/crypto-webhook.js" },
+    { "src": "/api/crypto-webhook",       "dest": "api/crypto-webhook.js" },
+    { "src": "/api/gocardless-webhook",  "dest": "api/gocardless-webhook.js" },
     { "src": "/preview/(.*)",            "dest": "api/generate-site.js?business=$1" },
     { "src": "/(.*)",                    "dest": "public/$1" }
   ]
