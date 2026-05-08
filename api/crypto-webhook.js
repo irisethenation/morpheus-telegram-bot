@@ -1,4 +1,4 @@
-const { processTransaction } = require('./payments/decisionEngine');
+const { processTransaction } = require('../lib/payments/decisionEngine');
 
 // Generic crypto payment webhook.
 // Designed to receive normalised payloads from:

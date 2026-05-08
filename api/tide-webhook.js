@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { processTransaction } = require('./payments/decisionEngine');
+const { processTransaction } = require('../lib/payments/decisionEngine');
 
 // Tide does not have native webhooks (as of 2026).
 // This endpoint is called by one of:

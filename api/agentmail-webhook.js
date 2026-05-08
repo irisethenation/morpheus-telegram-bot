@@ -1,4 +1,4 @@
-const { handleInboundReply } = require('./revenue/agentmail');
+const { handleInboundReply } = require('../lib/revenue/agentmail');
 
 // Receives inbound email notifications from AgentMail
 // Register this URL in AgentMail dashboard → Webhooks → New webhook

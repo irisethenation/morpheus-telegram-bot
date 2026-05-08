@@ -1,5 +1,5 @@
-const { createInvoice, getInvoice, listAll, listPending } = require('./payments/invoiceService');
-const { emitEvent } = require('./payments/eventBus');
+const { createInvoice, getInvoice, listAll, listPending } = require('../lib/payments/invoiceService');
+const { emitEvent } = require('../lib/payments/eventBus');
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');

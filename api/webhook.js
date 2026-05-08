@@ -1,16 +1,16 @@
 const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios');
-const { validate, generatePack, INFO } = require('./revenue/property');
-const { PRICING, NICHES, previewUrl, buildOffer } = require('./revenue/websites');
-const { get: getPayment } = require('./revenue/payments');
-const { SCRIPTS } = require('./revenue/outreach');
-const { init, addRevenue, getStatus, state } = require('./revenue/tracker');
-const { chat, isDolphin, clearHistory, MODELS } = require('./revenue/llm');
-const { sendEmail: resendSend, buildOutreachEmail } = require('./revenue/resend');
-const { sendEmail: amSend, listUnread, handleInboundReply } = require('./revenue/agentmail');
-const { createInvoice, getInvoice, getInvoiceByReference, listPending, listAll } = require('./payments/invoiceService');
-const { emitEvent } = require('./payments/eventBus');
-const { processTransaction } = require('./payments/decisionEngine');
+const { validate, generatePack, INFO } = require('../lib/revenue/property');
+const { PRICING, NICHES, previewUrl, buildOffer } = require('../lib/revenue/websites');
+const { get: getPayment } = require('../lib/revenue/payments');
+const { SCRIPTS } = require('../lib/revenue/outreach');
+const { init, addRevenue, getStatus, state } = require('../lib/revenue/tracker');
+const { chat, isDolphin, clearHistory, MODELS } = require('../lib/revenue/llm');
+const { sendEmail: resendSend, buildOutreachEmail } = require('../lib/revenue/resend');
+const { sendEmail: amSend, listUnread, handleInboundReply } = require('../lib/revenue/agentmail');
+const { createInvoice, getInvoice, getInvoiceByReference, listPending, listAll } = require('../lib/payments/invoiceService');
+const { emitEvent } = require('../lib/payments/eventBus');
+const { processTransaction } = require('../lib/payments/decisionEngine');
 
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN_MORPHEUS;
 const MORPHEUS_URL = process.env.MORPHEUS_API_URL || 'http://51.79.29.15:19000';

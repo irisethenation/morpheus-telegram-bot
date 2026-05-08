@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const axios  = require('axios');
-const { processTransaction } = require('./payments/decisionEngine');
+const { processTransaction } = require('../lib/payments/decisionEngine');
 
 // Handles BOTH Stripe payload styles:
 //

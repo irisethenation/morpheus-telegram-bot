@@ -1,6 +1,6 @@
 const axios = require('axios');
-const { previewUrl } = require('./revenue/websites');
-const { buildOutreachEmail } = require('./revenue/resend');
+const { previewUrl } = require('../lib/revenue/websites');
+const { buildOutreachEmail } = require('../lib/revenue/resend');
 
 const MORPHEUS_URL = process.env.MORPHEUS_API_URL || 'http://51.79.29.15:19000';
 const MORPHEUS_KEY = process.env.MORPHEUS_API_KEY;

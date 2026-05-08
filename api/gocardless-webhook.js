@@ -1,6 +1,6 @@
-const { verifySignature, normalisePaymentEvent, getPayment } = require('./revenue/gocardless');
-const { processTransaction } = require('./payments/decisionEngine');
-const { emitEvent }          = require('./payments/eventBus');
+const { verifySignature, normalisePaymentEvent, getPayment } = require('../lib/revenue/gocardless');
+const { processTransaction } = require('../lib/payments/decisionEngine');
+const { emitEvent }          = require('../lib/payments/eventBus');
 const axios                  = require('axios');
 
 // GoCardless sends a JSON array of events.
