@@ -1,5 +1,7 @@
 {
   "version": 2,
+  "buildCommand": "echo 'static only — no build step'",
+  "outputDirectory": "public",
   "rewrites": [
     { "source": "/preview/:path*", "destination": "/api/generate-site?business=:path" }
   ]
