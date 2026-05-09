@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Morpheus Intelligence System — Command Reference</title>
+<style>
+/* ── PRINT / PDF OPTIMISED ───────────────────────────────────────────── */
+@page { size: A4; margin: 18mm 18mm 20mm 18mm; }
+@media print {
+  .no-print { display:none!important; }
+  .page-break { page-break-before: always; }
+  body { font-size: 10pt; }
+  h1 { font-size: 20pt; }
+  h2 { font-size: 14pt; }
+  h3 { font-size: 11pt; }
+  pre, code { font-size: 8.5pt; }
+}
+
+/* ── BASE ─────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --gold: #f5c842; --gold2: #e5a800;
+  --ink: #08080f; --ink2: #0d0d1a;
+  --card: #111120; --border: rgba(255,255,255,.09);
+  --text: #ddddf0; --muted: #7070a0;
+  --purple: #6d28d9; --blue: #1d4ed8;
+  --green: #059669; --red: #dc2626; --orange: #d97706;
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--ink); color: var(--text);
+  line-height: 1.65; font-size: 13px;
+  padding: 0 0 80px;
+}
+a { color: var(--gold); text-decoration: none; }
+strong { color: #fff; font-weight: 600; }
+code {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  background: rgba(109,40,217,.15); border: 1px solid rgba(109,40,217,.25);
+  color: #c4b5fd; padding: 1px 6px; border-radius: 4px; font-size: .85em;
+}
+pre {
+  background: #0d0d1e; border: 1px solid var(--border); border-left: 3px solid var(--purple);
+  border-radius: 8px; padding: 14px 16px; overflow-x: auto; margin: 12px 0;
+  font-family: 'JetBrains Mono','Fira Code','Courier New',monospace; font-size: .82em;
+  color: #c4b5fd; line-height: 1.6;
+}
+pre code { background: none; border: none; padding: 0; color: inherit; font-size: inherit; }
+
+/* ── COVER ────────────────────────────────────────────────────────────── */
+.cover {
+  background: linear-gradient(135deg, #08080f 0%, #111126 50%, #0d0d1a 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 60px 48px 48px;
+  position: relative; overflow: hidden;
+}
+.cover::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 40% at 10% 0%, rgba(109,40,217,.18) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 50% at 90% 100%, rgba(29,78,216,.12) 0%, transparent 60%);
+}
+.cover-logo {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 40px; position: relative;
+}
+.cover-mark {
+  width: 48px; height: 48px; border-radius: 12px;
+  background: linear-gradient(135deg,var(--purple),var(--blue));
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 1.3rem; color: #fff;
+  box-shadow: 0 0 24px rgba(109,40,217,.4);
+}
+.cover-brand { font-size: 1.1rem; font-weight: 700; color: #fff; }
+.cover-brand span { color: var(--muted); font-weight: 400; font-size: .9rem; }
+.cover h1 {
+  font-size: 2.6rem; font-weight: 800; line-height: 1.15;
+  color: #fff; margin-bottom: 12px; position: relative;
+  letter-spacing: -.03em;
+}
+.cover h1 em { color: var(--gold); font-style: normal; }
+.cover-sub { color: var(--muted); font-size: 1rem; margin-bottom: 36px; max-width: 560px; }
+.cover-meta {
+  display: flex; gap: 32px; flex-wrap: wrap;
+  border-top: 1px solid var(--border); padding-top: 24px; position: relative;
+}
+.meta-item { }
+.meta-label { color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 3px; }
+.meta-value { color: #fff; font-weight: 600; font-size: .9rem; }
+
+/* ── LAYOUT ───────────────────────────────────────────────────────────── */
+.container { max-width: 900px; margin: 0 auto; padding: 0 32px; }
+
+/* ── TOC ──────────────────────────────────────────────────────────────── */
+.toc {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 28px 32px; margin: 36px 0;
+}
+.toc h2 { color: var(--gold); font-size: 1rem; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 20px; }
+.toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 32px; }
+.toc a { color: var(--muted); font-size: .88rem; display: flex; align-items: center; gap: 6px; padding: 2px 0; }
+.toc a:hover { color: var(--gold); }
+.toc-num { color: var(--purple); font-weight: 700; font-size: .78rem; min-width: 20px; }
+
+/* ── SECTIONS ─────────────────────────────────────────────────────────── */
+.section { margin: 48px 0; }
+.section-header {
+  display: flex; align-items: center; gap: 12px;
+  border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 24px;
+}
+.section-num {
+  background: linear-gradient(135deg,var(--purple),var(--blue));
+  color: #fff; font-weight: 800; font-size: .8rem;
+  width: 28px; height: 28px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+h2.section-title { font-size: 1.3rem; color: #fff; font-weight: 700; }
+h3 { font-size: .98rem; color: var(--gold); font-weight: 700; margin: 24px 0 10px; }
+p { color: var(--text); margin-bottom: 10px; max-width: 720px; }
+
+/* ── TABLES ───────────────────────────────────────────────────────────── */
+.table-wrap { overflow-x: auto; margin: 14px 0; }
+table { width: 100%; border-collapse: collapse; font-size: .87rem; }
+thead tr { background: rgba(109,40,217,.15); }
+th { color: var(--gold); font-weight: 700; text-align: left; padding: 9px 12px; font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--border); }
+td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,.04); color: var(--text); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: rgba(255,255,255,.02); }
+td code { font-size: .8em; }
+
+/* ── COMMAND CARDS ────────────────────────────────────────────────────── */
+.cmd-grid { display: grid; gap: 10px; margin: 14px 0; }
+.cmd-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px;
+  display: grid; grid-template-columns: 200px 1fr; gap: 8px 16px; align-items: start;
+}
+.cmd-name { font-family: monospace; color: #c4b5fd; font-weight: 600; font-size: .9rem; }
+.cmd-desc { color: var(--text); font-size: .88rem; }
+.cmd-example { grid-column: 1 / -1; }
+.cmd-example code { background: rgba(5,150,105,.12); border-color: rgba(5,150,105,.25); color: #6ee7b7; font-size: .82em; }
+
+/* ── FLOW DIAGRAM ─────────────────────────────────────────────────────── */
+.flow {
+  display: flex; align-items: center; gap: 0; flex-wrap: wrap;
+  margin: 18px 0; background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px 20px;
+}
+.flow-step {
+  background: rgba(109,40,217,.15); border: 1px solid rgba(109,40,217,.25);
+  border-radius: 7px; padding: 8px 14px; text-align: center;
+  font-size: .82rem; color: #c4b5fd; font-weight: 600; min-width: 100px;
+}
+.flow-arrow { color: var(--muted); font-size: 1.1rem; padding: 0 6px; }
+
+/* ── CALLOUTS ─────────────────────────────────────────────────────────── */
+.callout {
+  border-left: 3px solid var(--purple); background: rgba(109,40,217,.08);
+  border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 14px 0; font-size: .88rem;
+}
+.callout.green { border-color: var(--green); background: rgba(5,150,105,.08); }
+.callout.orange { border-color: var(--orange); background: rgba(217,119,6,.08); }
+.callout.red { border-color: var(--red); background: rgba(220,38,38,.08); }
+.callout-title { font-weight: 700; color: #fff; margin-bottom: 4px; font-size: .85rem; }
+
+/* ── ARCH CARDS ───────────────────────────────────────────────────────── */
+.arch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 14px 0; }
+.arch-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px;
+}
+.arch-card h4 { color: var(--gold); font-size: .85rem; font-weight: 700; margin-bottom: 6px; }
+.arch-card p { font-size: .8rem; color: var(--muted); margin: 0; }
+.arch-card .badge {
+  display: inline-block; background: rgba(109,40,217,.2); color: #c4b5fd;
+  font-size: .7rem; padding: 2px 7px; border-radius: 20px; margin-bottom: 6px;
+}
+
+/* ── ENV TABLE ────────────────────────────────────────────────────────── */
+.env-table td:first-child code { color: #fbbf24; background: rgba(245,200,66,.08); border-color: rgba(245,200,66,.2); }
+.required { color: #f87171; font-size: .75rem; font-weight: 700; }
+.optional-tag { color: #6ee7b7; font-size: .75rem; }
+
+/* ── PRINT BUTTON ─────────────────────────────────────────────────────── */
+.print-btn {
+  position: fixed; top: 20px; right: 20px; z-index: 99;
+  background: var(--purple); color: #fff; border: none; cursor: pointer;
+  padding: 10px 18px; border-radius: 8px; font-size: .88rem; font-weight: 600;
+  box-shadow: 0 4px 20px rgba(109,40,217,.4);
+}
+.print-btn:hover { background: #7c3aed; }
+</style>
+</head>
+<body>
+
+<button class="print-btn no-print" onclick="window.print()">⬇ Save as PDF</button>
+
+<!-- ══ COVER PAGE ══════════════════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-logo">
+    <div class="cover-mark">M</div>
+    <div class="cover-brand">Morpheus Intelligence<br><span>iRise Nation · OVH Edition</span></div>
+  </div>
+  <h1>System Command <em>Reference</em></h1>
+  <p class="cover-sub">Complete documentation for the Morpheus Telegram bot, payment intelligence pipeline, agent hierarchy, and operational commands.</p>
+  <div class="cover-meta">
+    <div class="meta-item"><div class="meta-label">Version</div><div class="meta-value">2.0 — OVH Edition</div></div>
+    <div class="meta-item"><div class="meta-label">Infrastructure</div><div class="meta-value">OVH · 51.79.29.15:19000</div></div>
+    <div class="meta-item"><div class="meta-label">Deployment</div><div class="meta-value">Vercel (webhook) + OVH (AI core)</div></div>
+    <div class="meta-item"><div class="meta-label">Classification</div><div class="meta-value">Internal — iRise Nation</div></div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ══ TABLE OF CONTENTS ══════════════════════════════════════════════════ -->
+<div class="toc">
+  <h2>Contents</h2>
+  <div class="toc-grid">
+    <a href="#s1"><span class="toc-num">01</span> System Architecture</a>
+    <a href="#s6"><span class="toc-num">06</span> Invoice &amp; Payment Commands</a>
+    <a href="#s2"><span class="toc-num">02</span> Agent Hierarchy</a>
+    <a href="#s7"><span class="toc-num">07</span> Payment Flow — End to End</a>
+    <a href="#s3"><span class="toc-num">03</span> Telegram Commands — Full Reference</a>
+    <a href="#s8"><span class="toc-num">08</span> Webhook Endpoints</a>
+    <a href="#s4"><span class="toc-num">04</span> Revenue &amp; Outreach Commands</a>
+    <a href="#s9"><span class="toc-num">09</span> Database Tables</a>
+    <a href="#s5"><span class="toc-num">05</span> AI Engine — LLM Routing</a>
+    <a href="#s10"><span class="toc-num">10</span> Environment Variables Checklist</a>
+  </div>
+</div>
+
+<!-- ══ 1. SYSTEM ARCHITECTURE ════════════════════════════════════════════ -->
+<div class="section" id="s1">
+  <div class="section-header">
+    <div class="section-num">01</div>
+    <h2 class="section-title">System Architecture</h2>
+  </div>
+
+  <p>Morpheus runs as a two-layer system: <strong>Vercel</strong> handles all inbound HTTP (Telegram webhook, payment webhooks, lead forms) and <strong>OVHCloud</strong> hosts the AI core (FastAPI, 69 skills, PostgreSQL, Redis, Qdrant).</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="badge">Vercel — Serverless</div>
+      <h4>Webhook Layer</h4>
+      <p>Receives Telegram messages, payment events, lead form submissions. Routes to OVH for AI processing. Hosts static GEM landing page.</p>
+    </div>
+    <div class="arch-card">
+      <div class="badge">OVH · 51.79.29.15</div>
+      <h4>AI Core (Port 19000)</h4>
+      <p>FastAPI with 69 skills. Manages agent memory, property pipeline, CRM, email dispatch via ox.livemail.co.uk. PostgreSQL morpheus_core DB.</p>
+    </div>
+    <div class="arch-card">
+      <div class="badge">OpenRouter</div>
+      <h4>LLM Router</h4>
+      <p>Dolphin (uncensored) for legal/mortgage/property. Gemma 3 27B for general conversation. OVH Morpheus as fallback if OpenRouter unreachable.</p>
+    </div>
+  </div>
+
+  <h3>Request Flow</h3>
+  <div class="flow">
+    <div class="flow-step">Telegram Message</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Vercel /api/webhook</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">LLM Router (OpenRouter)</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">OVH Morpheus API</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Telegram Reply</div>
+  </div>
+
+  <h3>File Structure</h3>
+  <pre><code>morpheus-telegram-bot/
+├── api/
+│   ├── webhook.js          # Main Telegram bot (all commands)
+│   ├── leads.js            # GEM lead form → Telegram approval card
+│   ├── invoice.js          # REST: create/get invoices
+│   ├── migrate.js          # One-shot DB migration endpoint
+│   ├── resend-events.js    # Email open/click/bounce events
+│   ├── tide-webhook.js     # Tide bank payment events
+│   ├── stripe-webhook.js   # Stripe payment events (thin + snapshot)
+│   ├── crypto-webhook.js   # Crypto payment events
+│   ├── generate-site.js    # /preview/:business HTML pages
+│   ├── payments/
+│   │   ├── db.js           # PostgreSQL connection pool
+│   │   ├── invoiceService.js
+│   │   ├── matcher.js      # Confidence scoring engine
+│   │   ├── replayGuard.js  # Duplicate prevention
+│   │   ├── decisionEngine.js # Main payment processor
+│   │   ├── eventBus.js     # Telegram alerts + OVH logging
+│   │   └── orchestrator.js # Agent trigger on payment
+│   └── revenue/
+│       ├── llm.js          # Dolphin / Gemma routing
+│       ├── property.js     # Deal pack, ARV validation
+│       ├── payments.js     # UK/US payment details
+│       ├── outreach.js     # Outreach scripts
+│       ├── tracker.js      # £15k campaign tracker
+│       ├── websites.js     # GEM pricing, preview URLs
+│       └── resend.js       # Email builder + Resend API
+├── db/
+│   └── 001_payment_tables.sql
+├── docs/
+│   └── morpheus-system-reference.html  ← this document
+├── scripts/
+│   └── migrate.js          # Local migration runner
+├── morpheus-intelligence/
+│   ├── soul.md             # Morpheus identity
+│   ├── config.md           # Infrastructure config
+│   ├── mapondera_soul.md   # Security agent
+│   └── trinity_soul.md     # Dispatcher agent
+└── public/
+    └── index.html          # GEM The Agency landing page</code></pre>
+</div>
+
+<!-- ══ 2. AGENT HIERARCHY ══════════════════════════════════════════════════ -->
+<div class="section page-break" id="s2">
+  <div class="section-header">
+    <div class="section-num">02</div>
+    <h2 class="section-title">Agent Hierarchy</h2>
+  </div>
+
+  <div class="arch-grid" style="grid-template-columns: 1fr 1fr 1fr 1fr;">
+    <div class="arch-card">
+      <div class="badge">Root Sovereign</div>
+      <h4>Morpheus</h4>
+      <p>Master AI. Manages all verticals: property, websites, trust, academy. Routes via OVH FastAPI (port 19000).</p>
+    </div>
+    <div class="arch-card">
+      <div class="badge">Dispatcher</div>
+      <h4>Trinity</h4>
+      <p>Batch outreach. Decomposes task lists into atomic single-skill sub-agents. Activates Ruflo swarm for 50+ simultaneous sends.</p>
+    </div>
+    <div class="arch-card">
+      <div class="badge">Security</div>
+      <h4>Mapondera</h4>
+      <p>Scans for exposed credentials every 6h. Manages secret rotation. Spawns sub-agents (one skill each). Activates Ruflo for 3+ parallel skills.</p>
+    </div>
+    <div class="arch-card">
+      <div class="badge">Swarm</div>
+      <h4>Ruflo</h4>
+      <p>Parallel task execution engine. Spawns N sub-agents simultaneously. 120s timeout. Activated by Trinity or Mapondera.</p>
+    </div>
+  </div>
+
+  <h3>Spawning Rules</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Batch Size</th><th>Dispatcher</th><th>Method</th></tr></thead>
+      <tbody>
+        <tr><td>1–2 skills</td><td>Mapondera</td><td>Direct sub-agents, sequential or pairs</td></tr>
+        <tr><td>3+ skills</td><td>Mapondera</td><td>Ruflo swarm activation</td></tr>
+        <tr><td>Under 10 contacts</td><td>Trinity</td><td>Direct sub-agents</td></tr>
+        <tr><td>10–49 contacts</td><td>Trinity</td><td>Groups of 10, staggered 5s</td></tr>
+        <tr><td>50+ contacts</td><td>Trinity → Mapondera</td><td>Ruflo swarm</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout orange">
+    <div class="callout-title">⚠️ Credential Rule</div>
+    No agent stores credentials. Trinity receives them as task payloads from Mapondera's secure store, uses once, discards. All secrets live in <code>/opt/stacks/morpheus/.env</code> (OVH) or Vercel dashboard.
+  </div>
+</div>
+
+<!-- ══ 3. TELEGRAM COMMANDS — FULL REFERENCE ══════════════════════════════ -->
+<div class="section page-break" id="s3">
+  <div class="section-header">
+    <div class="section-num">03</div>
+    <h2 class="section-title">Telegram Commands — Full Reference</h2>
+  </div>
+  <p>All commands are sent directly in the Morpheus Telegram bot. Commands prefixed with <code>/</code>.</p>
+
+  <h3>System & Health</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Command</th><th>Description</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td><code>/start</code></td><td>Show full command reference and status</td><td><code>/start</code></td></tr>
+        <tr><td><code>/health</code></td><td>Ping OVH Morpheus API — shows uptime, version, skill count</td><td><code>/health</code></td></tr>
+        <tr><td><code>/agents</code></td><td>List all 69 skills available on OVH</td><td><code>/agents</code></td></tr>
+        <tr><td><code>/tasks</code></td><td>Show pending tasks in Morpheus queue</td><td><code>/tasks</code></td></tr>
+        <tr><td><code>/run [skill]</code></td><td>Execute any OVH skill directly</td><td><code>/run send_email</code></td></tr>
+        <tr><td><code>/model</code></td><td>Show active LLM routing — Dolphin vs Gemma</td><td><code>/model</code></td></tr>
+        <tr><td><code>/clear</code></td><td>Reset your conversation history with the AI</td><td><code>/clear</code></td></tr>
+        <tr><td><code>/help</code></td><td>Full command reference in Telegram</td><td><code>/help</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ 4. REVENUE & OUTREACH COMMANDS ════════════════════════════════════ -->
+<div class="section" id="s4">
+  <div class="section-header">
+    <div class="section-num">04</div>
+    <h2 class="section-title">Revenue &amp; Outreach Commands</h2>
+  </div>
+
+  <h3>Property Pipeline</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Command</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>/property</code></td><td>Show US/UK property pipeline overview — reverse wholesale details, wepaycash info</td></tr>
+        <tr><td><code>/wepaycash</code></td><td>Display wepaycash4yourhouse.com seller landing page copy</td></tr>
+        <tr><td><code>/dealpack</code></td><td>Interactive 6-step flow — generates a full deal pack (price, ARV, rehab, ROI, region)</td></tr>
+        <tr><td><code>/buyer</code></td><td>5-step buyer qualification flow — captures region, budget, ROI, POF, timeline</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Website Sales (GEM The Agency)</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Command</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>/websites</code></td><td>Show GEM Agency pricing tiers and niche overview</td></tr>
+        <tr><td><code>/preview [name]</code></td><td>Generate personalised preview URL for a business<br><em>e.g.</em> <code>/preview Smith Estate Agents</code> → <code>gemtheagency.com/preview/smith-estate-agents</code></td></tr>
+        <tr><td><code>/outreach</code></td><td>Interactive menu of copy-ready outreach scripts (investor, deal sourcing, website, JV, buyer push)</td></tr>
+        <tr><td><code>/outreach_log</code> or <code>/sent</code></td><td>Query morpheus_core for all outreach email stats — sent/opened/clicked/bounced</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Revenue Tracking (£15k Campaign)</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Command</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>/revenue</code></td><td>Show campaign tracker — day number, total raised, breakdown by stream, remaining to target</td></tr>
+        <tr><td><code>/log_revenue [amount] [type]</code></td><td>Manually log revenue to tracker<br><em>e.g.</em> <code>/log_revenue 2500 websites</code><br>Types: <code>property</code> <code>websites</code> <code>irise</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>iRise Services</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Command</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>/trust</code></td><td>Trust delivery packages — Foundational (£2,997), Advanced (£5,997), Sovereign (£9,997)</td></tr>
+        <tr><td><code>/academy</code></td><td>Academy courses overview</td></tr>
+        <tr><td><code>/pricing</code></td><td>Full iRise pricing table</td></tr>
+        <tr><td><code>/intake</code></td><td>3-step trust consultation intake — jurisdiction, assets, purpose</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Payment Routing</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Command</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>/pay_uk</code></td><td>UK payment details — Global Executive Marketing Limited via Tide</td></tr>
+        <tr><td><code>/pay_us</code></td><td>US payment details — Genesis 1One LLC via Mercury</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ 5. AI ENGINE ════════════════════════════════════════════════════════ -->
+<div class="section page-break" id="s5">
+  <div class="section-header">
+    <div class="section-num">05</div>
+    <h2 class="section-title">AI Engine — LLM Routing</h2>
+  </div>
+
+  <p>Routing is <strong>automatic</strong> — Morpheus detects keywords in your message and selects the appropriate model. You never need to switch manually.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Model</th><th>ID</th><th>Used For</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>🐬 Dolphin</strong></td>
+          <td><code>cognitivecomputations/dolphin3.0-r1-mistral-24b:free</code></td>
+          <td>Legal, mortgage, property analysis, contracts, disputes</td>
+          <td>Uncensored — no refusals on legal/financial case work</td>
+        </tr>
+        <tr>
+          <td><strong>⚡ Gemma 3 27B</strong></td>
+          <td><code>google/gemma-3-27b-it:free</code></td>
+          <td>General conversation, academy questions, greetings</td>
+          <td>Fast, capable, appropriate for standard queries</td>
+        </tr>
+        <tr>
+          <td><strong>🔷 OVH Morpheus</strong></td>
+          <td><code>/api/morpheus/message</code></td>
+          <td>Fallback when OpenRouter is unreachable</td>
+          <td>On-premise — always available</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Dolphin Trigger Keywords (36 total)</h3>
+  <pre><code>mortgage · conveyancing · affidavit · deed · clause · solicitor · LTV · DSR
+ARV · rehab · due diligence · wholesaling · assignment · off-market
+landlord · tenant · eviction · section 21 · CCJ · tribunal · court
+probate · beneficial · fiduciary · trust deed · estate planning
+capital gains · stamp duty · planning permission · HMO · BTL
+bridging · completion · exchange · gazumping · restrictive covenant</code></pre>
+
+  <div class="callout green">
+    <div class="callout-title">How to check which model responded</div>
+    Every AI reply is labelled: <em>🐬 Dolphin — legal/case mode</em> or <em>⚡ Gemma — general mode</em>. Use <code>/model</code> to see the full routing configuration.
+  </div>
+</div>
+
+<!-- ══ 6. INVOICE & PAYMENT COMMANDS ══════════════════════════════════════ -->
+<div class="section" id="s6">
+  <div class="section-header">
+    <div class="section-num">06</div>
+    <h2 class="section-title">Invoice &amp; Payment Commands</h2>
+  </div>
+
+  <p>Every payment is pre-traced before it arrives. Create an invoice → give the client the <code>IRISE-XXXXXXXX</code> reference → they include it on their bank transfer → Morpheus matches it automatically.</p>
+
+  <div class="cmd-grid">
+    <div class="cmd-card">
+      <div class="cmd-name">/invoice</div>
+      <div class="cmd-desc">Create a new invoice. Generates a unique <code>IRISE-XXXXXXXX</code> reference that the client uses on their bank transfer.</div>
+      <div class="cmd-example">
+        <code>/invoice 2500</code><br>
+        <code>/invoice 5500 John Smith</code><br>
+        <code>/invoice 12000 Smith Estates john@smith.com</code>
+      </div>
+    </div>
+    <div class="cmd-card">
+      <div class="cmd-name">/invoices</div>
+      <div class="cmd-desc">List the last 15 invoices with status (✅ paid / ⏳ pending / ❌ cancelled).</div>
+      <div class="cmd-example"><code>/invoices</code></div>
+    </div>
+    <div class="cmd-card">
+      <div class="cmd-name">/pending</div>
+      <div class="cmd-desc">Show all pending invoices awaiting payment. Use this to check what's outstanding.</div>
+      <div class="cmd-example"><code>/pending</code></div>
+    </div>
+    <div class="cmd-card">
+      <div class="cmd-name">/pay_status [ref]</div>
+      <div class="cmd-desc">Look up any invoice by its IRISE reference. Shows amount, status, client, and paid timestamp.</div>
+      <div class="cmd-example"><code>/pay_status IRISE-A83F91C2</code></div>
+    </div>
+    <div class="cmd-card">
+      <div class="cmd-name">/log_payment [amount] [ref]</div>
+      <div class="cmd-desc">Manually record a payment. Use this when a webhook isn't set up yet, or to confirm a Tide transfer you can see in your app. Fires the full matching pipeline — agents trigger if matched.</div>
+      <div class="cmd-example">
+        <code>/log_payment 2500 IRISE-A83F91C2</code><br>
+        <code>/log_payment 5500 IRISE-B92E3F1A John Smith</code>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout orange">
+    <div class="callout-title">⚠️ Before invoice commands work</div>
+    Add <code>PAYMENT_DB_URL</code> to Vercel dashboard and run the migration once:<br>
+    <code>curl -X POST https://&lt;vercel-url&gt;/api/migrate -H "X-API-Key: &lt;MORPHEUS_API_KEY&gt;"</code>
+  </div>
+</div>
+
+<!-- ══ 7. PAYMENT FLOW ════════════════════════════════════════════════════ -->
+<div class="section page-break" id="s7">
+  <div class="section-header">
+    <div class="section-num">07</div>
+    <h2 class="section-title">Payment Flow — End to End</h2>
+  </div>
+
+  <h3>Standard Bank Transfer (Tide)</h3>
+  <div class="flow" style="flex-direction:column; align-items:flex-start; gap:0;">
+    <div style="display:flex;align-items:center;gap:8px;margin:4px 0">
+      <div class="flow-step" style="min-width:140px">1. You: /invoice 2500</div>
+      <div class="flow-arrow">→</div>
+      <div style="font-size:.85rem;color:var(--muted)">Creates invoice · generates <code>IRISE-A83F91C2</code></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin:4px 0">
+      <div class="flow-step" style="min-width:140px">2. Tell client</div>
+      <div class="flow-arrow">→</div>
+      <div style="font-size:.85rem;color:var(--muted)">Use reference <code>IRISE-A83F91C2</code> on bank transfer</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin:4px 0">
+      <div class="flow-step" style="min-width:140px">3. Client pays</div>
+      <div class="flow-arrow">→</div>
+      <div style="font-size:.85rem;color:var(--muted)">Tide receives £2,500 with ref IRISE-A83F91C2</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin:4px 0">
+      <div class="flow-step" style="min-width:140px">4. Webhook fires</div>
+      <div class="flow-arrow">→</div>
+      <div style="font-size:.85rem;color:var(--muted)"><code>POST /api/tide-webhook</code> (or <code>/log_payment</code> manually)</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin:4px 0">
+      <div class="flow-step" style="min-width:140px">5. Match engine</div>
+      <div class="flow-arrow">→</div>
+      <div style="font-size:.85rem;color:var(--muted)">Reference match = 100% confidence · invoice marked paid</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin:4px 0">
+      <div class="flow-step" style="min-width:140px">6. Revenue locked</div>
+      <div class="flow-arrow">→</div>
+      <div style="font-size:.85rem;color:var(--muted)">Written to <code>revenue</code> table · immutable ledger entry</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin:4px 0">
+      <div class="flow-step" style="min-width:140px">7. Telegram alert</div>
+      <div class="flow-arrow">→</div>
+      <div style="font-size:.85rem;color:var(--muted)">💰 PAYMENT RECEIVED · £2,500 · 100% confidence</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin:4px 0">
+      <div class="flow-step" style="min-width:140px">8. Agents trigger</div>
+      <div class="flow-arrow">→</div>
+      <div style="font-size:.85rem;color:var(--muted)">OVH receives PAYMENT_CONFIRMED · Trinity starts fulfilment</div>
+    </div>
+  </div>
+
+  <h3>Matching Confidence Levels</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Confidence</th><th>Match Type</th><th>Condition</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td><strong style="color:#6ee7b7">100%</strong></td><td>Exact reference</td><td>Transaction reference = <code>IRISE-XXXXXXXX</code> exactly</td><td>Auto-match, agents trigger</td></tr>
+        <tr><td><strong style="color:#6ee7b7">95%</strong></td><td>Partial reference</td><td>Bank narrative contains the IRISE code anywhere</td><td>Auto-match, agents trigger</td></tr>
+        <tr><td><strong style="color:#fbbf24">70–94%</strong></td><td>Fuzzy weighted</td><td>Amount ±£50 (40pts) + time proximity (20pts) + name overlap (10pts) + ref snippet (30pts)</td><td>Auto-match, Telegram alert with confidence score</td></tr>
+        <tr><td><strong style="color:#f87171">&lt;70%</strong></td><td>No match</td><td>Insufficient signal</td><td>⚠️ UNMATCHED PAYMENT alert — use <code>/log_payment</code> to match manually</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Stripe Payload Handling</h3>
+  <p>The Stripe webhook handles two payload formats automatically:</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Format</th><th>Structure</th><th>Reference Location</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Snapshot</strong> (recommended)</td>
+          <td><code>event.data.object</code> = full Stripe object</td>
+          <td><code>event.data.object.metadata.reference</code></td>
+        </tr>
+        <tr>
+          <td><strong>Thin</strong> (new Event Destinations)</td>
+          <td><code>event.data</code> = minimal reference only</td>
+          <td>Falls back to fuzzy match on amount + time</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout green">
+    <div class="callout-title">✅ Recommended: Enable snapshot payloads</div>
+    In Stripe Dashboard → Developers → Webhooks → your endpoint → toggle <strong>"Send snapshot data"</strong>. This ensures 100% reference matching from Stripe payments.
+  </div>
+</div>
+
+<!-- ══ 8. WEBHOOK ENDPOINTS ════════════════════════════════════════════════ -->
+<div class="section" id="s8">
+  <div class="section-header">
+    <div class="section-num">08</div>
+    <h2 class="section-title">Webhook Endpoints</h2>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Endpoint</th><th>Purpose</th><th>Auth</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>/api/webhook</code></td>
+          <td>Telegram bot — all messages and commands</td>
+          <td>Telegram token in URL</td>
+          <td>✅ Live</td>
+        </tr>
+        <tr>
+          <td><code>/api/leads</code></td>
+          <td>GEM lead form submissions → Telegram approval card</td>
+          <td>None (public form)</td>
+          <td>✅ Live</td>
+        </tr>
+        <tr>
+          <td><code>/api/invoice</code></td>
+          <td>Create/get invoices via REST (internal use)</td>
+          <td><code>X-API-Key</code> header</td>
+          <td>✅ Live</td>
+        </tr>
+        <tr>
+          <td><code>/api/tide-webhook</code></td>
+          <td>Inbound Tide bank payments (HMAC verified)</td>
+          <td><code>X-Tide-Signature</code></td>
+          <td>⏳ Ready — needs Tide poller/n8n</td>
+        </tr>
+        <tr>
+          <td><code>/api/stripe-webhook</code></td>
+          <td>Stripe payment events — thin + snapshot</td>
+          <td>Stripe-Signature header</td>
+          <td>⏳ Ready — activates when STRIPE_WEBHOOK_SECRET set</td>
+        </tr>
+        <tr>
+          <td><code>/api/crypto-webhook</code></td>
+          <td>Crypto payments — NOWPayments, CoinGate, custom</td>
+          <td>None (normalised payload)</td>
+          <td>⏳ Ready — wire to payment provider</td>
+        </tr>
+        <tr>
+          <td><code>/api/resend-events</code></td>
+          <td>Email open/click/bounce events from Resend</td>
+          <td>Resend svix signature</td>
+          <td>⏳ Ready — register in Resend dashboard</td>
+        </tr>
+        <tr>
+          <td><code>/api/migrate</code></td>
+          <td>One-shot DB migration runner</td>
+          <td><code>X-API-Key</code> header</td>
+          <td>✅ Live — call once</td>
+        </tr>
+        <tr>
+          <td><code>/preview/:name</code></td>
+          <td>Personalised business preview pages</td>
+          <td>None (public)</td>
+          <td>✅ Live</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Email Outreach Flow (Lead Form → Approval → Send)</h3>
+  <div class="flow">
+    <div class="flow-step">Form submit</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">/api/leads</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Telegram approval card</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">You tap ✅</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Resend API sends</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Open/click alerts</div>
+  </div>
+  <p style="margin-top:8px;color:var(--muted);font-size:.85rem">NO email ever leaves without your explicit Telegram button press. Skip (❌) or defer (⏰) options on every lead.</p>
+</div>
+
+<!-- ══ 9. DATABASE TABLES ══════════════════════════════════════════════════ -->
+<div class="section page-break" id="s9">
+  <div class="section-header">
+    <div class="section-num">09</div>
+    <h2 class="section-title">Database Tables (morpheus_core)</h2>
+  </div>
+  <p>All payment tables live in the <code>morpheus_core</code> PostgreSQL database on OVH. Run once to create: <code>psql $POSTGRES_URL -f db/001_payment_tables.sql</code></p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Table</th><th>Purpose</th><th>Key Fields</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>invoices</strong></td>
+          <td>Every invoice you create before payment arrives</td>
+          <td><code>id</code> UUID · <code>reference</code> IRISE-XXXXXXXX (unique) · <code>amount</code> · <code>status</code> (pending/paid/cancelled) · <code>client_name</code> · <code>client_email</code> · <code>lead_id</code></td>
+        </tr>
+        <tr>
+          <td><strong>transactions</strong></td>
+          <td>Raw inbound payments from all providers — immutable on insert</td>
+          <td><code>id</code> (provider's own ID — guarantees idempotency) · <code>provider</code> (tide/stripe/crypto/manual) · <code>amount</code> · <code>reference</code> · <code>raw</code> JSONB · <code>processed</code></td>
+        </tr>
+        <tr>
+          <td><strong>payment_matches</strong></td>
+          <td>Anti-replay audit log — one row per matched transaction/invoice pair</td>
+          <td><code>transaction_id</code> (unique) · <code>invoice_id</code> · <code>confidence</code> 0–100 · <code>match_type</code> (reference/fuzzy/manual)</td>
+        </tr>
+        <tr>
+          <td><strong>revenue</strong></td>
+          <td>Immutable ledger of all confirmed revenue events</td>
+          <td><code>lead_id</code> · <code>invoice_id</code> · <code>transaction_id</code> · <code>total_value</code> · <code>stream</code> (websites/property/trust/academy)</td>
+        </tr>
+        <tr>
+          <td><strong>affiliates</strong></td>
+          <td>Affiliate partners — ledger only, no auto-payout</td>
+          <td><code>name</code> · <code>email</code> · <code>code</code> (unique) · <code>rate_pct</code> default 10%</td>
+        </tr>
+        <tr>
+          <td><strong>affiliate_earnings</strong></td>
+          <td>Earned commissions pending manual approval</td>
+          <td><code>affiliate_id</code> · <code>invoice_id</code> · <code>amount</code> · <code>status</code> (pending/approved/paid/rejected)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Useful Queries</h3>
+  <pre><code>-- All paid invoices this month
+SELECT reference, amount, client_name, paid_at
+FROM invoices WHERE status = 'paid'
+  AND paid_at > date_trunc('month', NOW())
+ORDER BY paid_at DESC;
+
+-- Unmatched transactions (need manual matching)
+SELECT id, amount, reference, sender_name, created_at
+FROM transactions WHERE processed = FALSE
+ORDER BY created_at DESC;
+
+-- Revenue by stream
+SELECT stream, SUM(total_value) AS total
+FROM revenue GROUP BY stream ORDER BY total DESC;
+
+-- Confidence distribution of all matches
+SELECT match_type, AVG(confidence)::int AS avg_confidence, COUNT(*)
+FROM payment_matches GROUP BY match_type;</code></pre>
+</div>
+
+<!-- ══ 10. ENVIRONMENT VARIABLES ══════════════════════════════════════════ -->
+<div class="section" id="s10">
+  <div class="section-header">
+    <div class="section-num">10</div>
+    <h2 class="section-title">Environment Variables Checklist</h2>
+  </div>
+  <p>All secrets go in <strong>Vercel dashboard → Settings → Environment Variables</strong> (never in code or vercel.json). OVH secrets go in <code>/opt/stacks/morpheus/.env</code>.</p>
+
+  <div class="table-wrap env-table">
+    <table>
+      <thead><tr><th>Variable</th><th>Required?</th><th>Where to get it</th><th>Where it lives</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>TELEGRAM_BOT_TOKEN_MORPHEUS</code></td>
+          <td><span class="required">REQUIRED</span></td>
+          <td>@BotFather → /newbot or /token</td>
+          <td>Vercel dashboard</td>
+        </tr>
+        <tr>
+          <td><code>TRINITY_ADMIN_CHAT_ID</code></td>
+          <td><span class="required">REQUIRED</span></td>
+          <td>Message @userinfobot on Telegram — returns your numeric ID</td>
+          <td>Vercel dashboard</td>
+        </tr>
+        <tr>
+          <td><code>MORPHEUS_API_URL</code></td>
+          <td><span class="required">REQUIRED</span></td>
+          <td><code>http://51.79.29.15:19000</code></td>
+          <td>Vercel dashboard</td>
+        </tr>
+        <tr>
+          <td><code>MORPHEUS_API_KEY</code></td>
+          <td><span class="required">REQUIRED</span></td>
+          <td>Set in OVH FastAPI config — same key for all calls</td>
+          <td>Vercel dashboard</td>
+        </tr>
+        <tr>
+          <td><code>OPENROUTER_API_KEY</code></td>
+          <td><span class="required">REQUIRED</span></td>
+          <td>openrouter.ai/keys → Create new key</td>
+          <td>Vercel dashboard</td>
+        </tr>
+        <tr>
+          <td><code>PAYMENT_DB_URL</code></td>
+          <td><span class="required">REQUIRED for invoices</span></td>
+          <td><code>postgresql://user:pass@host:5432/morpheus_core</code><br>OVH postgres must be externally accessible, or use Neon free tier</td>
+          <td>Vercel dashboard</td>
+        </tr>
+        <tr>
+          <td><code>RESEND_API_KEY</code></td>
+          <td><span class="required">REQUIRED for email</span></td>
+          <td>resend.com → API Keys → Create key</td>
+          <td>Vercel dashboard</td>
+        </tr>
+        <tr>
+          <td><code>RESEND_FROM_EMAIL</code></td>
+          <td><span class="required">REQUIRED for email</span></td>
+          <td>e.g. <code>GEM The Agency &lt;morpheus@gemtheagency.com&gt;</code><br>Domain must be verified in Resend dashboard first</td>
+          <td>Vercel dashboard</td>
+        </tr>
+        <tr>
+          <td><code>RESEND_WEBHOOK_SECRET</code></td>
+          <td><span class="optional-tag">optional</span></td>
+          <td>Resend dashboard → Webhooks → add <code>/api/resend-events</code> → copy whsec_...</td>
+          <td>Vercel dashboard</td>
+        </tr>
+        <tr>
+          <td><code>STRIPE_WEBHOOK_SECRET</code></td>
+          <td><span class="optional-tag">dormant until Stripe verified</span></td>
+          <td>Stripe Dashboard → Developers → Webhooks → add <code>/api/stripe-webhook</code> → copy whsec_...</td>
+          <td>Vercel dashboard</td>
+        </tr>
+        <tr>
+          <td><code>TIDE_WEBHOOK_SECRET</code></td>
+          <td><span class="optional-tag">optional</span></td>
+          <td>Set in your Tide polling script / n8n workflow — any string you choose</td>
+          <td>Vercel dashboard</td>
+        </tr>
+        <tr>
+          <td><code>TELEGRAM_BOT_TOKEN_TRINITY</code></td>
+          <td><span class="optional-tag">optional</span></td>
+          <td>@BotFather — separate Trinity bot token</td>
+          <td>Vercel dashboard</td>
+        </tr>
+        <tr>
+          <td><code>GEM_AGENCY_URL</code></td>
+          <td><span class="optional-tag">optional</span></td>
+          <td><code>https://gemtheagency.com</code> (default used if not set)</td>
+          <td>Vercel dashboard</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Running the Migration (One Time)</h3>
+  <div class="callout green">
+    <div class="callout-title">Option A — Via Vercel API endpoint (easiest)</div>
+    <pre style="margin:8px 0 0"><code>curl -X POST https://&lt;your-vercel-preview-url&gt;/api/migrate \
+     -H "X-API-Key: &lt;MORPHEUS_API_KEY&gt;"</code></pre>
+    Returns: <code>{"ok":true,"tables":["affiliates","affiliate_earnings","invoices","payment_matches","revenue","transactions"]}</code>
+  </div>
+  <div class="callout" style="margin-top:10px">
+    <div class="callout-title">Option B — Directly on OVH server</div>
+    <pre style="margin:8px 0 0"><code>ssh user@51.79.29.15
+export PAYMENT_DB_URL=postgresql://...
+cd /opt/stacks/morpheus
+node morpheus-telegram-bot/scripts/migrate.js</code></pre>
+  </div>
+
+  <h3>Registering the Telegram Webhook</h3>
+  <p>After deploying to Vercel and setting <code>TELEGRAM_BOT_TOKEN_MORPHEUS</code>, register the webhook once:</p>
+  <pre><code>https://api.telegram.org/bot&lt;TOKEN&gt;/setWebhook?url=https://&lt;vercel-preview-url&gt;/api/webhook</code></pre>
+  <p>Verify it's registered: <code>https://api.telegram.org/bot&lt;TOKEN&gt;/getWebhookInfo</code></p>
+
+  <div class="callout red" style="margin-top:24px">
+    <div class="callout-title">🔐 Security Rules (Mapondera Absolute Law)</div>
+    1. No secret ever enters a public repository — only <code>.env</code> files and Vercel dashboard<br>
+    2. <code>.env.example</code> documents variable names only — never values<br>
+    3. Rotate all tokens immediately on any suspected exposure (contact @BotFather for Telegram tokens)<br>
+    4. OpenRouter keys auto-disabled if detected in public repos — get new key at openrouter.ai/keys
+  </div>
+</div>
+
+<!-- ══ FOOTER ══════════════════════════════════════════════════════════════ -->
+<div style="border-top:1px solid var(--border);margin-top:60px;padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+  <div style="color:var(--muted);font-size:.82rem">
+    Morpheus Intelligence System · iRise Nation · OVH Edition v2.0<br>
+    Generated: <span id="date"></span>
+  </div>
+  <div style="color:var(--muted);font-size:.82rem;text-align:right">
+    Global Executive Marketing Limited<br>
+    OVH: 51.79.29.15:19000 · Vercel: morpheus-telegram-bot
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<script>
+document.getElementById('date').textContent = new Date().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'});
+</script>
+</body>
+</html>

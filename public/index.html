@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GEM The Agency — AI-Powered Business Automation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── RESET ──────────────────────────────────────────────────────────────── */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gold:#f5c842;--gold2:#e5a800;
+  --ink:#08080f;--ink2:#0d0d1a;--ink3:#111126;
+  --card:#111120;--card2:#161630;
+  --border:rgba(255,255,255,0.07);--border-gold:rgba(245,200,66,0.2);
+  --text:#ddddf0;--muted:#7070a0;--muted2:#4a4a70;
+  --purple:#6d28d9;--purple2:#8b5cf6;
+  --blue:#1d4ed8;--teal:#0d9488;
+  --r:14px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Space Grotesk',sans-serif;background:var(--ink);color:var(--text);overflow-x:hidden}
+a{text-decoration:none;color:inherit}
+img{max-width:100%;display:block}
+
+/* ── AMBIENT ────────────────────────────────────────────────────────────── */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 70% 40% at 15% 0%,rgba(109,40,217,.1) 0%,transparent 65%),
+    radial-gradient(ellipse 50% 35% at 85% 15%,rgba(29,78,216,.08) 0%,transparent 65%),
+    radial-gradient(ellipse 40% 50% at 60% 90%,rgba(245,200,66,.04) 0%,transparent 70%);
+}
+
+/* ── NAV ────────────────────────────────────────────────────────────────── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  padding:1rem 2.5rem;display:flex;align-items:center;justify-content:space-between;
+  background:rgba(8,8,15,.7);backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--border);transition:background .3s;
+}
+nav.solid{background:rgba(8,8,15,.97)}
+.logo{display:flex;align-items:center;gap:.7rem}
+.logo-mark{
+  width:34px;height:34px;border-radius:8px;
+  background:linear-gradient(135deg,var(--purple),var(--blue));
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:.85rem;color:#fff;letter-spacing:-.5px;
+  box-shadow:0 0 18px rgba(109,40,217,.4);
+}
+.logo-text{font-weight:700;font-size:1rem;color:#fff}
+.logo-text span{color:var(--gold)}
+.nav-links{display:flex;gap:2rem;list-style:none}
+.nav-links a{font-size:.88rem;color:var(--muted);font-weight:500;transition:color .2s}
+.nav-links a:hover{color:#fff}
+.nav-actions{display:flex;gap:.8rem;align-items:center}
+.nav-btn-ghost{font-size:.88rem;color:var(--muted);font-weight:600;padding:.5rem .9rem;border:1px solid var(--border);border-radius:8px;transition:all .2s}
+.nav-btn-ghost:hover{color:#fff;border-color:rgba(255,255,255,.2)}
+.nav-btn-cta{background:var(--gold);color:#000;padding:.55rem 1.3rem;border-radius:8px;font-weight:800;font-size:.88rem;transition:transform .15s,box-shadow .15s}
+.nav-btn-cta:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(245,200,66,.35)}
+@media(max-width:860px){.nav-links{display:none}.nav-btn-ghost{display:none}}
+
+/* ── HERO ───────────────────────────────────────────────────────────────── */
+.hero{
+  min-height:100vh;display:grid;grid-template-columns:1fr 1fr;
+  align-items:center;gap:3rem;
+  max-width:1200px;margin:0 auto;padding:8rem 2.5rem 4rem;
+  position:relative;z-index:1;
+}
+@media(max-width:860px){.hero{grid-template-columns:1fr;text-align:center;padding-top:7rem}}
+
+.hero-label{
+  display:inline-flex;align-items:center;gap:.5rem;
+  background:rgba(109,40,217,.12);border:1px solid rgba(109,40,217,.25);
+  padding:.35rem .9rem;border-radius:20px;
+  font-size:.75rem;font-weight:700;color:#a78bfa;letter-spacing:.5px;text-transform:uppercase;
+  margin-bottom:1.5rem;
+}
+.hero-label::before{content:'';width:6px;height:6px;border-radius:50%;background:#a78bfa;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.hero-h1{
+  font-size:clamp(2.4rem,5.5vw,4rem);font-weight:800;line-height:1.08;margin-bottom:1.3rem;
+}
+.hero-h1 .line-white{color:#fff;display:block}
+.hero-h1 .line-grad{
+  display:block;
+  background:linear-gradient(135deg,var(--gold) 0%,#f97316 50%,var(--purple2) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero-p{font-size:1.05rem;color:var(--muted);line-height:1.75;margin-bottom:2.5rem;max-width:480px}
+@media(max-width:860px){.hero-p{margin:0 auto 2.5rem}}
+
+.hero-ctas{display:flex;gap:1rem;flex-wrap:wrap}
+@media(max-width:860px){.hero-ctas{justify-content:center}}
+.btn-primary{
+  background:var(--gold);color:#000;padding:.95rem 2.2rem;border-radius:10px;
+  font-weight:800;font-size:.98rem;transition:transform .15s,box-shadow .15s;
+  display:inline-flex;align-items:center;gap:.5rem;
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(245,200,66,.38)}
+.btn-outline{
+  border:1px solid var(--border);color:var(--text);padding:.95rem 2.2rem;
+  border-radius:10px;font-size:.98rem;font-weight:600;
+  transition:border-color .2s,background .2s;
+}
+.btn-outline:hover{border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.04)}
+
+.hero-proof{
+  display:flex;gap:2rem;margin-top:2.5rem;flex-wrap:wrap;
+}
+@media(max-width:860px){.hero-proof{justify-content:center}}
+.proof-item{display:flex;align-items:center;gap:.5rem}
+.proof-avatar-group{display:flex}
+.proof-avatar{
+  width:28px;height:28px;border-radius:50%;
+  border:2px solid var(--ink);margin-left:-8px;
+  background:linear-gradient(135deg,var(--purple),var(--blue));
+  font-size:.6rem;font-weight:800;color:#fff;
+  display:flex;align-items:center;justify-content:center;
+}
+.proof-avatar:first-child{margin-left:0}
+.proof-text{font-size:.82rem;color:var(--muted)}
+.proof-text strong{color:#fff}
+
+/* ── HERO VISUAL (right column) ─────────────────────────────────────────── */
+.hero-visual{position:relative;perspective:1000px}
+.hv-main{
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:20px;padding:1.5rem;
+  transform:rotateY(-6deg) rotateX(3deg);
+  box-shadow:20px 20px 80px rgba(0,0,0,.6),0 0 0 1px var(--border);
+  animation:hv-float 7s ease-in-out infinite;
+}
+@keyframes hv-float{
+  0%,100%{transform:rotateY(-6deg) rotateX(3deg) translateY(0)}
+  50%{transform:rotateY(-6deg) rotateX(3deg) translateY(-10px)}
+}
+.hv-topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding-bottom:1rem;border-bottom:1px solid var(--border);margin-bottom:1rem;
+}
+.hv-title{font-size:.82rem;font-weight:700;color:#fff}
+.hv-badge-live{
+  background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.3);
+  color:#10b981;font-size:.68rem;font-weight:700;padding:.2rem .6rem;border-radius:20px;
+  display:flex;align-items:center;gap:.3rem;
+}
+.hv-badge-live::before{content:'';width:5px;height:5px;border-radius:50%;background:#10b981;animation:pulse 2s infinite}
+.sop-steps{display:flex;flex-direction:column;gap:.6rem}
+.sop-step{
+  display:flex;align-items:center;gap:.8rem;padding:.7rem .9rem;
+  background:rgba(255,255,255,.03);border:1px solid var(--border);
+  border-radius:10px;transition:border-color .3s;
+}
+.sop-step.active{border-color:rgba(109,40,217,.4);background:rgba(109,40,217,.06)}
+.sop-step.done{border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.04)}
+.sop-icon{font-size:1.1rem;flex-shrink:0}
+.sop-text{flex:1}
+.sop-name{font-size:.82rem;font-weight:600;color:#fff;line-height:1.2}
+.sop-detail{font-size:.72rem;color:var(--muted);margin-top:.1rem}
+.sop-status{font-size:.68rem;font-weight:700;padding:.15rem .5rem;border-radius:20px;white-space:nowrap}
+.sop-status.done-s{background:rgba(16,185,129,.12);color:#10b981}
+.sop-status.active-s{background:rgba(109,40,217,.15);color:#a78bfa}
+.sop-status.pending-s{background:rgba(255,255,255,.05);color:var(--muted2)}
+
+.hv-float-chip{
+  position:absolute;background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:.6rem .9rem;box-shadow:0 8px 30px rgba(0,0,0,.4);
+  font-size:.78rem;font-weight:600;white-space:nowrap;
+}
+.hv-float-chip.chip1{top:-12px;right:-20px;color:#10b981;border-color:rgba(16,185,129,.25)}
+.hv-float-chip.chip2{bottom:-10px;left:-24px;color:var(--gold);border-color:var(--border-gold)}
+
+/* ── SECTION SHARED ─────────────────────────────────────────────────────── */
+.section{position:relative;z-index:1}
+.container{max-width:1200px;margin:0 auto;padding:7rem 2.5rem}
+.s-tag{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--gold);margin-bottom:.8rem;display:block}
+.s-h2{font-size:clamp(1.9rem,3.8vw,2.8rem);font-weight:800;line-height:1.15;margin-bottom:.8rem}
+.s-h2 em{font-style:normal;background:linear-gradient(135deg,var(--gold),#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.s-sub{color:var(--muted);font-size:1rem;line-height:1.7;max-width:540px;margin-bottom:3rem}
+
+/* ── PAIN POINTS ────────────────────────────────────────────────────────── */
+.pain-section{background:var(--ink2)}
+.pain-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:3rem}
+@media(max-width:768px){.pain-grid{grid-template-columns:1fr}}
+.pain-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;padding:1.8rem;position:relative;overflow:hidden;
+}
+.pain-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--purple),var(--blue));
+}
+.pain-q{font-size:1.1rem;font-weight:700;color:#fff;margin-bottom:.6rem}
+.pain-p{font-size:.9rem;color:var(--muted);line-height:1.65}
+.pain-then{
+  margin-top:1.2rem;padding-top:1rem;border-top:1px solid var(--border);
+  font-size:.85rem;color:var(--purple2);font-weight:600;display:flex;gap:.4rem;align-items:flex-start;
+}
+.pain-then::before{content:'→';flex-shrink:0}
+
+/* ── FULL STACK / SOP JOURNEY ───────────────────────────────────────────── */
+.journey-section{background:var(--ink)}
+.journey-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:1.2rem;margin-top:3rem;
+}
+@media(max-width:900px){.journey-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.journey-grid{grid-template-columns:1fr}}
+
+.j-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;padding:1.5rem;position:relative;
+  transition:transform .2s,border-color .2s;cursor:default;
+}
+.j-card:hover{transform:translateY(-4px);border-color:rgba(109,40,217,.3)}
+.j-num{
+  width:32px;height:32px;border-radius:8px;
+  background:linear-gradient(135deg,var(--purple),var(--blue));
+  font-size:.78rem;font-weight:800;color:#fff;
+  display:flex;align-items:center;justify-content:center;margin-bottom:1rem;
+}
+.j-icon{font-size:1.4rem;margin-bottom:.6rem}
+.j-title{font-size:.95rem;font-weight:700;color:#fff;margin-bottom:.4rem}
+.j-desc{font-size:.82rem;color:var(--muted);line-height:1.6}
+
+.journey-connector{
+  display:flex;align-items:center;justify-content:center;
+  gap:1rem;margin:2rem 0;flex-wrap:wrap;
+}
+.j-conn-item{
+  display:flex;align-items:center;gap:.5rem;
+  font-size:.8rem;color:var(--muted);
+}
+.j-conn-arrow{color:var(--purple2);font-size:1.1rem}
+
+/* ── NICHE SHOWCASE ─────────────────────────────────────────────────────── */
+.niche-section{background:var(--ink2)}
+.niche-tabs{
+  display:flex;gap:.5rem;margin-bottom:2.5rem;
+  background:rgba(255,255,255,.04);padding:.4rem;border-radius:12px;
+  width:fit-content;
+}
+.niche-tab{
+  padding:.6rem 1.3rem;border-radius:8px;font-size:.88rem;font-weight:600;
+  color:var(--muted);cursor:pointer;transition:all .2s;border:none;
+  background:transparent;font-family:'Space Grotesk',sans-serif;
+}
+.niche-tab.active{background:var(--card2);color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+
+.niche-panel{display:none}
+.niche-panel.active{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center}
+@media(max-width:768px){.niche-panel.active{grid-template-columns:1fr}}
+
+.niche-info .pain-list{margin:1.5rem 0;list-style:none}
+.niche-info .pain-list li{
+  display:flex;gap:.7rem;align-items:flex-start;
+  padding:.55rem 0;border-bottom:1px solid var(--border);
+  font-size:.9rem;color:var(--muted);
+}
+.niche-info .pain-list li:last-child{border:none}
+.pain-x{color:#ef4444;font-size:.85rem;flex-shrink:0;margin-top:1px}
+.pain-check{color:#10b981;font-size:.85rem;flex-shrink:0;margin-top:1px}
+.niche-info .solution-list{list-style:none;margin-top:1rem}
+.niche-info .solution-list li{
+  display:flex;gap:.7rem;align-items:flex-start;
+  padding:.55rem 0;border-bottom:1px solid var(--border);
+  font-size:.9rem;color:var(--text);
+}
+
+/* ── WEBSITE DESIGN SLIDER ──────────────────────────────────────────────── */
+.websites-section{background:var(--ink3)}
+.design-slider{
+  position:relative;overflow:hidden;border-radius:20px;
+  border:1px solid var(--border);margin-top:3rem;
+}
+.slides-track{
+  display:flex;transition:transform .5s cubic-bezier(.4,0,.2,1);
+}
+.slide{
+  min-width:100%;padding:2.5rem;
+  display:grid;grid-template-columns:1fr 1fr;gap:2.5rem;align-items:center;
+}
+@media(max-width:768px){.slide{grid-template-columns:1fr;padding:1.5rem}}
+.slide-copy .slide-niche{
+  font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;
+  color:var(--gold);margin-bottom:.6rem;
+}
+.slide-copy h3{font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:.6rem}
+.slide-copy p{font-size:.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem}
+.slide-features{list-style:none}
+.slide-features li{
+  display:flex;gap:.5rem;font-size:.85rem;color:var(--muted);
+  padding:.3rem 0;
+}
+.slide-features li::before{content:'✓';color:var(--gold);font-weight:700;flex-shrink:0}
+
+.slide-mockup{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;
+}
+.sm-bar{
+  background:rgba(255,255,255,.05);padding:.7rem 1rem;
+  display:flex;align-items:center;gap:.5rem;
+  border-bottom:1px solid var(--border);
+}
+.sm-dot{width:7px;height:7px;border-radius:50%}
+.sm-dot:nth-child(1){background:#ff5f57}
+.sm-dot:nth-child(2){background:#febc2e}
+.sm-dot:nth-child(3){background:#28c840}
+.sm-url{
+  flex:1;background:rgba(255,255,255,.05);border-radius:4px;
+  padding:.2rem .6rem;font-size:.65rem;color:var(--muted);
+}
+
+/* Estate Agent mockup */
+.sm-hero-ea{
+  padding:1.5rem;background:linear-gradient(135deg,rgba(29,78,216,.15),rgba(13,148,136,.1));
+  text-align:center;border-bottom:1px solid var(--border);
+}
+.sm-hero-ea h4{font-size:1rem;font-weight:800;color:#fff;margin-bottom:.3rem}
+.sm-hero-ea p{font-size:.7rem;color:var(--muted);margin-bottom:.8rem}
+.sm-search{
+  background:rgba(255,255,255,.06);border:1px solid var(--border);
+  border-radius:6px;padding:.5rem .8rem;display:flex;gap:.5rem;align-items:center;
+}
+.sm-search span{font-size:.65rem;color:var(--muted);flex:1}
+.sm-search-btn{background:var(--gold);color:#000;font-size:.6rem;font-weight:700;padding:.25rem .6rem;border-radius:4px}
+.sm-prop-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;padding:1rem}
+.sm-prop{background:rgba(255,255,255,.04);border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.sm-prop-img{height:45px;background:linear-gradient(135deg,rgba(109,40,217,.3),rgba(29,78,216,.2));display:flex;align-items:center;justify-content:center;font-size:.9rem}
+.sm-prop-info{padding:.4rem .5rem}
+.sm-prop-price{font-size:.72rem;font-weight:800;color:var(--gold)}
+.sm-prop-addr{font-size:.6rem;color:var(--muted)}
+
+/* Trades mockup */
+.sm-hero-tr{
+  padding:1.5rem;background:linear-gradient(135deg,rgba(245,200,66,.08),rgba(249,115,22,.06));
+  border-bottom:1px solid var(--border);
+}
+.sm-hero-tr h4{font-size:.95rem;font-weight:800;color:#fff;margin-bottom:.2rem}
+.sm-hero-tr p{font-size:.68rem;color:var(--muted);margin-bottom:.8rem}
+.sm-trust-badges{display:flex;gap:.4rem;flex-wrap:wrap}
+.sm-trust-badge{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:4px;padding:.2rem .5rem;font-size:.6rem;color:var(--muted)}
+.sm-cta-strip{
+  display:flex;gap:.5rem;padding:.8rem 1rem;border-top:1px solid var(--border);
+}
+.sm-cta-btn{
+  flex:1;padding:.45rem;border-radius:6px;font-size:.65rem;font-weight:700;text-align:center;
+}
+.sm-cta-btn.cta-gold{background:var(--gold);color:#000}
+.sm-cta-btn.cta-ghost{border:1px solid var(--border);color:var(--muted)}
+
+.slider-controls{
+  display:flex;align-items:center;justify-content:center;gap:1rem;
+  padding:1.5rem;border-top:1px solid var(--border);background:rgba(255,255,255,.02);
+}
+.slider-btn{
+  width:36px;height:36px;border-radius:50%;background:var(--card2);
+  border:1px solid var(--border);color:var(--text);font-size:1rem;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .2s;
+}
+.slider-btn:hover{background:rgba(255,255,255,.08)}
+.slider-dots{display:flex;gap:.5rem}
+.slider-dot{width:8px;height:8px;border-radius:50%;background:var(--muted2);transition:background .2s,width .2s}
+.slider-dot.active{background:var(--gold);width:20px;border-radius:4px}
+
+/* ── PRICING ────────────────────────────────────────────────────────────── */
+.pricing-section{background:var(--ink2)}
+.pricing-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:3rem;
+}
+@media(max-width:900px){.pricing-grid{grid-template-columns:1fr}}
+
+.price-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:22px;padding:2rem;position:relative;
+  transition:transform .25s;
+}
+.price-card:hover{transform:translateY(-5px)}
+.price-card.featured{
+  border-color:rgba(109,40,217,.45);
+  background:linear-gradient(180deg,#13132b 0%,var(--card) 100%);
+  box-shadow:0 0 60px rgba(109,40,217,.12);
+}
+.featured-pill{
+  position:absolute;top:-14px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(135deg,var(--purple),var(--blue));
+  color:#fff;font-size:.7rem;font-weight:800;padding:.35rem 1rem;
+  border-radius:20px;white-space:nowrap;letter-spacing:.5px;text-transform:uppercase;
+}
+.price-tier{font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:.5rem}
+.price-name{font-size:1.3rem;font-weight:800;color:#fff;margin-bottom:.5rem}
+.price-tagline{font-size:.88rem;color:var(--muted);line-height:1.5;margin-bottom:1.5rem}
+.price-amount{margin-bottom:.3rem}
+.price-amount .from{font-size:.8rem;color:var(--muted);font-weight:500}
+.price-amount .val{font-size:2.6rem;font-weight:800;color:#fff}
+.price-amount .period{font-size:.85rem;color:var(--muted)}
+.price-setup{font-size:.78rem;color:var(--muted);margin-bottom:1.5rem}
+.price-divider{border:none;border-top:1px solid var(--border);margin:1.2rem 0}
+.price-features{list-style:none;margin-bottom:2rem}
+.price-features li{
+  display:flex;gap:.6rem;align-items:flex-start;
+  font-size:.88rem;color:var(--muted);padding:.4rem 0;
+  border-bottom:1px solid rgba(255,255,255,.03);
+}
+.price-features li:last-child{border:none}
+.pf-check{color:var(--gold);font-weight:700;flex-shrink:0;margin-top:1px}
+.price-btn{
+  display:block;text-align:center;padding:.95rem;border-radius:10px;
+  font-weight:800;font-size:.95rem;transition:all .2s;
+}
+.price-btn.b-gold{background:var(--gold);color:#000}
+.price-btn.b-gold:hover{box-shadow:0 6px 22px rgba(245,200,66,.38);transform:translateY(-1px)}
+.price-btn.b-purple{background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff}
+.price-btn.b-purple:hover{box-shadow:0 6px 22px rgba(109,40,217,.4);transform:translateY(-1px)}
+.price-btn.b-ghost{border:1px solid var(--border);color:var(--text)}
+.price-btn.b-ghost:hover{background:rgba(255,255,255,.05)}
+
+/* ── TESTIMONIAL / RESULTS ──────────────────────────────────────────────── */
+.results-section{background:var(--ink)}
+.results-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:3rem}
+@media(max-width:768px){.results-grid{grid-template-columns:1fr}}
+.result-card{
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:18px;padding:1.8rem;
+}
+.result-metric{font-size:2.2rem;font-weight:800;color:var(--gold);margin-bottom:.3rem}
+.result-label{font-size:.88rem;color:#fff;font-weight:600;margin-bottom:.4rem}
+.result-desc{font-size:.82rem;color:var(--muted);line-height:1.6}
+
+/* ── CTA SECTION ────────────────────────────────────────────────────────── */
+.cta-section{
+  background:linear-gradient(180deg,var(--ink2) 0%,var(--ink) 100%);
+  border-top:1px solid var(--border);
+}
+.cta-inner{
+  max-width:680px;margin:0 auto;padding:7rem 2.5rem;text-align:center;
+}
+.cta-h2{font-size:clamp(2rem,4vw,2.8rem);font-weight:800;color:#fff;margin-bottom:1rem}
+.cta-p{font-size:1.05rem;color:var(--muted);margin-bottom:2.5rem}
+.cta-form{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:20px;padding:2rem;text-align:left;
+}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:500px){.form-row{grid-template-columns:1fr}}
+.fg{margin-bottom:1rem}
+label{display:block;font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.4rem}
+input,select,textarea{
+  width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:8px;padding:.75rem 1rem;color:#fff;font-size:.95rem;
+  font-family:'Space Grotesk',sans-serif;outline:none;
+  transition:border-color .2s,background .2s;
+}
+input:focus,select:focus,textarea:focus{border-color:rgba(109,40,217,.5);background:rgba(255,255,255,.06)}
+input::placeholder,textarea::placeholder{color:var(--muted2)}
+select option{background:#1a1a2e}
+textarea{resize:vertical;min-height:90px}
+.form-submit{
+  width:100%;background:var(--gold);color:#000;border:none;
+  padding:1rem;border-radius:10px;font-size:1rem;font-weight:800;
+  cursor:pointer;font-family:'Space Grotesk',sans-serif;
+  transition:transform .15s,box-shadow .15s;margin-top:.3rem;
+}
+.form-submit:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(245,200,66,.38)}
+.form-note{text-align:center;font-size:.78rem;color:var(--muted2);margin-top:.8rem}
+
+/* ── FOOTER ─────────────────────────────────────────────────────────────── */
+.footer-wrap{background:var(--ink);border-top:1px solid var(--border)}
+.footer-grid{
+  max-width:1200px;margin:0 auto;padding:3.5rem 2.5rem 2rem;
+  display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:2.5rem;
+}
+@media(max-width:768px){.footer-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.footer-grid{grid-template-columns:1fr}}
+.footer-brand p{font-size:.85rem;color:var(--muted);margin-top:.5rem;max-width:240px;line-height:1.6}
+.footer-col h5{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted2);margin-bottom:.9rem}
+.footer-col a{display:block;font-size:.85rem;color:var(--muted);margin-bottom:.4rem;transition:color .2s}
+.footer-col a:hover{color:#fff}
+.footer-bottom{
+  max-width:1200px;margin:0 auto;padding:1.2rem 2.5rem;
+  border-top:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;
+  font-size:.78rem;color:var(--muted2);
+}
+
+/* ── REVEAL ─────────────────────────────────────────────────────────────── */
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .55s,transform .55s}
+.reveal.visible{opacity:1;transform:none}
+.reveal-delay-1{transition-delay:.1s}
+.reveal-delay-2{transition-delay:.2s}
+.reveal-delay-3{transition-delay:.3s}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="logo">
+    <div class="logo-mark">G</div>
+    <span class="logo-text">GEM<span> The Agency</span></span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#how-it-works">How It Works</a></li>
+    <li><a href="#niches">Industries</a></li>
+    <li><a href="#websites">Examples</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+  </ul>
+  <div class="nav-actions">
+    <a href="#contact" class="nav-btn-ghost">Book a Demo</a>
+    <a href="#contact" class="nav-btn-cta">Get Started →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero" style="z-index:1;position:relative">
+  <div class="hero-left">
+    <div class="hero-label">AI Business Automation</div>
+    <h1 class="hero-h1">
+      <span class="line-white">Your Business.</span>
+      <span class="line-grad">Runs Itself.</span>
+    </h1>
+    <p class="hero-p">From first lead to signed contract to payment collected — Morpheus handles every step. No staff required. No bottlenecks. 24/7 operation.</p>
+    <div class="hero-ctas">
+      <a href="#contact" class="btn-primary">See It In Action <span>→</span></a>
+      <a href="#how-it-works" class="btn-outline">How It Works</a>
+    </div>
+    <div class="hero-proof">
+      <div class="proof-item">
+        <div class="proof-avatar-group">
+          <div class="proof-avatar">EA</div>
+          <div class="proof-avatar">PB</div>
+          <div class="proof-avatar">TR</div>
+        </div>
+        <div class="proof-text">Trusted by <strong>estate agents, brokers & trades</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOP Visual -->
+  <div class="hero-visual">
+    <div class="hv-main">
+      <div class="hv-topbar">
+        <span class="hv-title">Morpheus — Active Pipeline</span>
+        <span class="hv-badge-live">Live · Running</span>
+      </div>
+      <div class="sop-steps">
+        <div class="sop-step done">
+          <span class="sop-icon">🔍</span>
+          <div class="sop-text">
+            <div class="sop-name">Lead Captured</div>
+            <div class="sop-detail">Sarah Mitchell · Estate Agent · London</div>
+          </div>
+          <span class="sop-status done-s">Done</span>
+        </div>
+        <div class="sop-step done">
+          <span class="sop-icon">📅</span>
+          <div class="sop-text">
+            <div class="sop-name">Appointment Booked</div>
+            <div class="sop-detail">Demo call · Tomorrow 11:00am</div>
+          </div>
+          <span class="sop-status done-s">Done</span>
+        </div>
+        <div class="sop-step active">
+          <span class="sop-icon">🤖</span>
+          <div class="sop-text">
+            <div class="sop-name">Avatar Consultation</div>
+            <div class="sop-detail">Qualifying via AI avatar — in progress</div>
+          </div>
+          <span class="sop-status active-s">Running</span>
+        </div>
+        <div class="sop-step">
+          <span class="sop-icon">📝</span>
+          <div class="sop-text">
+            <div class="sop-name">Contract & E-Sign</div>
+            <div class="sop-detail">Awaiting qualification result</div>
+          </div>
+          <span class="sop-status pending-s">Pending</span>
+        </div>
+        <div class="sop-step">
+          <span class="sop-icon">💳</span>
+          <div class="sop-text">
+            <div class="sop-name">Payment Collection</div>
+            <div class="sop-detail">Auto-triggered post-signature</div>
+          </div>
+          <span class="sop-status pending-s">Pending</span>
+        </div>
+      </div>
+    </div>
+    <div class="hv-float-chip chip1">✓ No human required</div>
+    <div class="hv-float-chip chip2">⚡ 24/7 Operation</div>
+  </div>
+</div>
+
+<!-- PAIN POINTS -->
+<section class="section pain-section" id="pain">
+  <div class="container">
+    <span class="s-tag">The Problem</span>
+    <h2 class="s-h2">You're brilliant at your trade.<br><em>But the admin is killing you.</em></h2>
+    <p class="s-sub">Every lead you miss, every follow-up you forget, every contract you send late — that's revenue walking out the door.</p>
+    <div class="pain-grid">
+      <div class="pain-card reveal">
+        <div class="pain-q">Leads come in — but no one follows up fast enough.</div>
+        <p class="pain-p">Studies show 78% of clients choose the first business to respond. If you're replying hours later, you've already lost the deal.</p>
+        <div class="pain-then">Morpheus responds in under 60 seconds, qualifies the lead, and books the appointment — automatically.</div>
+      </div>
+      <div class="pain-card reveal reveal-delay-1">
+        <div class="pain-q">You're spending evenings on quotes, contracts, and invoices.</div>
+        <p class="pain-p">The admin that runs your business shouldn't be eating your personal time. You didn't go self-employed to spend 3 hours a night on paperwork.</p>
+        <div class="pain-then">Morpheus generates, sends, and chases contracts and invoices — triggered automatically at the right moment.</div>
+      </div>
+      <div class="pain-card reveal">
+        <div class="pain-q">Your website looks dated and doesn't generate leads.</div>
+        <p class="pain-p">A static website that just lists your services isn't a sales asset — it's a business card. Clients want to interact, book, and trust you before they call.</p>
+        <div class="pain-then">We build AI-powered websites that qualify visitors, book appointments, and nurture leads while you sleep.</div>
+      </div>
+      <div class="pain-card reveal reveal-delay-1">
+        <div class="pain-q">You can't scale without hiring — and hiring is expensive and risky.</div>
+        <p class="pain-p">A good member of staff costs £25k–£40k per year. They get sick, leave, and need managing. There's a better way to scale.</p>
+        <div class="pain-then">Morpheus is your full operational stack — lead gen, outreach, booking, conversion, contracts, payment, aftercare. One flat monthly cost.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS — FULL SOP JOURNEY -->
+<section class="section journey-section" id="how-it-works">
+  <div class="container">
+    <span class="s-tag">The Solution</span>
+    <h2 class="s-h2">One system.<br><em>Every step handled.</em></h2>
+    <p class="s-sub">Morpheus runs your complete client acquisition and fulfilment cycle — from cold lead to paid client to review — with zero human intervention.</p>
+    <div class="journey-grid">
+      <div class="j-card reveal">
+        <div class="j-num">01</div>
+        <div class="j-icon">🔍</div>
+        <div class="j-title">Lead Generation & Scraping</div>
+        <p class="j-desc">Morpheus identifies and scrapes targeted leads in your niche — email, social, directories — organised and ready for outreach.</p>
+      </div>
+      <div class="j-card reveal reveal-delay-1">
+        <div class="j-num">02</div>
+        <div class="j-icon">✉️</div>
+        <div class="j-title">Personalised Outreach</div>
+        <p class="j-desc">AI-crafted outreach messages sent to each lead. Personalised by business name, location, and vertical. Follow-ups automated on schedule.</p>
+      </div>
+      <div class="j-card reveal reveal-delay-2">
+        <div class="j-num">03</div>
+        <div class="j-icon">📅</div>
+        <div class="j-title">Appointment Booking</div>
+        <p class="j-desc">Interested leads are sent directly to a booking flow. Calendar synced. Reminders sent. No back-and-forth scheduling.</p>
+      </div>
+      <div class="j-card reveal reveal-delay-3">
+        <div class="j-num">04</div>
+        <div class="j-icon">🤖</div>
+        <div class="j-title">Avatar Qualification Meeting</div>
+        <p class="j-desc">A React-powered AI avatar conducts the discovery call — asks the right questions, scores the prospect, and determines the right package. No human on the call.</p>
+      </div>
+      <div class="j-card reveal">
+        <div class="j-num">05</div>
+        <div class="j-icon">🏠</div>
+        <div class="j-title">Virtual Tours & Demos</div>
+        <p class="j-desc">For estate agents: interactive virtual property tours delivered without a physical viewing. For others: automated product/service demos.</p>
+      </div>
+      <div class="j-card reveal reveal-delay-1">
+        <div class="j-num">06</div>
+        <div class="j-icon">📄</div>
+        <div class="j-title">Contract Generation & E-Sign</div>
+        <p class="j-desc">Agreements generated from the qualification data, personalised, and sent for e-signature. Legally binding. Automated reminder if unsigned after 24hrs.</p>
+      </div>
+      <div class="j-card reveal reveal-delay-2">
+        <div class="j-num">07</div>
+        <div class="j-icon">💳</div>
+        <div class="j-title">Payment Collection</div>
+        <p class="j-desc">Payment link triggered automatically post-signature. Stripe/SumUp. Receipts issued. Failed payments chased automatically.</p>
+      </div>
+      <div class="j-card reveal reveal-delay-3">
+        <div class="j-num">08</div>
+        <div class="j-icon">⭐</div>
+        <div class="j-title">Onboarding & Aftercare</div>
+        <p class="j-desc">Client onboarded with a personalised welcome sequence. Aftercare check-ins automated. Review requests sent at the optimal moment.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NICHE SHOWCASE -->
+<section class="section niche-section" id="niches">
+  <div class="container">
+    <span class="s-tag">Industries We Serve</span>
+    <h2 class="s-h2">Built for businesses<br><em>that can't afford to stand still.</em></h2>
+    <p class="s-sub">We go deep into two core niches where the ROI on automation is highest and the pain is clearest.</p>
+
+    <div class="niche-tabs">
+      <button class="niche-tab active" onclick="switchTab(0)">🏠 Estate Agents</button>
+      <button class="niche-tab" onclick="switchTab(1)">🔧 Tradespeople</button>
+    </div>
+
+    <!-- Estate Agents -->
+    <div class="niche-panel active" id="niche-0">
+      <div class="niche-info reveal">
+        <h3 style="font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:.5rem">Estate Agents & Letting Agents</h3>
+        <p style="color:var(--muted);font-size:.9rem;margin-bottom:1.2rem">You're dealing with buyers, sellers, landlords, tenants, solicitors, and surveyors — all simultaneously. The paperwork and follow-up alone could fill a full-time role.</p>
+        <p style="font-size:.82rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:.5rem">What slows you down</p>
+        <ul class="pain-list">
+          <li><span class="pain-x">✗</span>Leads sitting uncontacted for hours after they enquire</li>
+          <li><span class="pain-x">✗</span>Manual viewings scheduling back-and-forth</li>
+          <li><span class="pain-x">✗</span>Property descriptions written manually per listing</li>
+          <li><span class="pain-x">✗</span>Offer accepted — then weeks of silence to solicitors</li>
+          <li><span class="pain-x">✗</span>Tenant onboarding drowning in PDF forms</li>
+        </ul>
+        <p style="font-size:.82rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:1rem 0 .5rem">What Morpheus handles for you</p>
+        <ul class="solution-list">
+          <li><span class="pain-check">✓</span>Instant lead response + automatic viewing booking</li>
+          <li><span class="pain-check">✓</span>Virtual tours served on demand — no physical attendance</li>
+          <li><span class="pain-check">✓</span>AI-generated property descriptions + listing copy</li>
+          <li><span class="pain-check">✓</span>Offer to completion communication chain automated</li>
+          <li><span class="pain-check">✓</span>Tenant ID checks, contracts, and e-sign all in one flow</li>
+        </ul>
+      </div>
+      <div class="reveal reveal-delay-1" style="background:var(--card);border:1px solid var(--border);border-radius:18px;padding:1.5rem">
+        <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:1rem">Morpheus Pipeline — Estate Agent</div>
+        <div style="display:flex;flex-direction:column;gap:.7rem">
+          <div style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:.9rem 1rem;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:.85rem;color:#fff">Buyer enquiry received</span>
+            <span style="font-size:.72rem;color:#10b981;font-weight:700">→ Responded in 47s</span>
+          </div>
+          <div style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:.9rem 1rem;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:.85rem;color:#fff">Virtual tour sent</span>
+            <span style="font-size:.72rem;color:#10b981;font-weight:700">→ Viewed 3 properties</span>
+          </div>
+          <div style="background:rgba(109,40,217,.06);border:1px solid rgba(109,40,217,.25);border-radius:10px;padding:.9rem 1rem;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:.85rem;color:#fff">Viewing booked</span>
+            <span style="font-size:.72rem;color:#a78bfa;font-weight:700">→ In progress</span>
+          </div>
+          <div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:.9rem 1rem;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:.85rem;color:var(--muted)">Offer & solicitor chain</span>
+            <span style="font-size:.72rem;color:var(--muted2);font-weight:700">→ Awaiting</span>
+          </div>
+        </div>
+        <div style="margin-top:1.2rem;padding:1rem;background:rgba(245,200,66,.05);border:1px solid var(--border-gold);border-radius:10px;font-size:.82rem;color:var(--gold)">
+          ⚡ Average time from lead to booked viewing: <strong>4 minutes</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tradespeople -->
+    <div class="niche-panel" id="niche-1">
+      <div class="niche-info reveal">
+        <h3 style="font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:.5rem">Self-Employed Tradespeople</h3>
+        <p style="color:var(--muted);font-size:.9rem;margin-bottom:1.2rem">Plumbers, electricians, builders, gas engineers — brilliant at the work, drowning in the business. You shouldn't need to be a marketing expert to fill your diary.</p>
+        <p style="font-size:.82rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:.5rem">What slows you down</p>
+        <ul class="pain-list">
+          <li><span class="pain-x">✗</span>Missed calls while on a job site — lost to a competitor</li>
+          <li><span class="pain-x">✗</span>Quoting manually, evenings spent on paperwork</li>
+          <li><span class="pain-x">✗</span>Chasing invoices from clients who go quiet</li>
+          <li><span class="pain-x">✗</span>No review collection — competitors outranking you on Google</li>
+          <li><span class="pain-x">✗</span>Word of mouth only — no consistent lead pipeline</li>
+        </ul>
+        <p style="font-size:.82rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:1rem 0 .5rem">What Morpheus handles for you</p>
+        <ul class="solution-list">
+          <li><span class="pain-check">✓</span>Every missed call answered instantly by AI — job booked</li>
+          <li><span class="pain-check">✓</span>Quotes generated and sent automatically from call data</li>
+          <li><span class="pain-check">✓</span>Invoices sent and chased automatically until paid</li>
+          <li><span class="pain-check">✓</span>Review requests sent at job completion — Google/Checkatrade</li>
+          <li><span class="pain-check">✓</span>Local SEO + lead scraping fills your diary continuously</li>
+        </ul>
+      </div>
+      <div class="reveal reveal-delay-1" style="background:var(--card);border:1px solid var(--border);border-radius:18px;padding:1.5rem">
+        <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:1rem">Morpheus Pipeline — Tradesperson</div>
+        <div style="display:flex;flex-direction:column;gap:.7rem">
+          <div style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:.9rem 1rem;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:.85rem;color:#fff">Missed call received</span>
+            <span style="font-size:.72rem;color:#10b981;font-weight:700">→ AI answered, job booked</span>
+          </div>
+          <div style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:.9rem 1rem;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:.85rem;color:#fff">Quote auto-generated</span>
+            <span style="font-size:.72rem;color:#10b981;font-weight:700">→ Sent in 3 minutes</span>
+          </div>
+          <div style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:.9rem 1rem;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:.85rem;color:#fff">Job completed</span>
+            <span style="font-size:.72mn;color:#10b981;font-weight:700">→ Invoice + review request sent</span>
+          </div>
+          <div style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:.9rem 1rem;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:.85rem;color:#fff">Payment received</span>
+            <span style="font-size:.72rem;color:#10b981;font-weight:700">→ 5★ Google review posted</span>
+          </div>
+        </div>
+        <div style="margin-top:1.2rem;padding:1rem;background:rgba(245,200,66,.05);border:1px solid var(--border-gold);border-radius:10px;font-size:.82rem;color:var(--gold)">
+          ⚡ Average additional jobs per month from missed-call automation: <strong>+8–14</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WEBSITE DESIGN EXAMPLES SLIDER -->
+<section class="section websites-section" id="websites">
+  <div class="container">
+    <span class="s-tag">Design Examples</span>
+    <h2 class="s-h2">Websites built to<br><em>convert, not just look good.</em></h2>
+    <p class="s-sub">Every site we build is AI-powered, mobile-first, and connected to the full Morpheus automation stack from day one.</p>
+
+    <div class="design-slider">
+      <div class="slides-track" id="slidesTrack">
+
+        <!-- Slide 1: Estate Agent -->
+        <div class="slide">
+          <div class="slide-copy">
+            <div class="slide-niche">Estate Agent · Primary Niche</div>
+            <h3>Premium Property Website</h3>
+            <p>Full property portal with interactive search, instant lead capture, virtual tour integration, and automated viewing booking. Buyers and sellers handled automatically.</p>
+            <ul class="slide-features">
+              <li>Instant lead response — AI contacts within 60 seconds</li>
+              <li>Virtual tour embed per listing</li>
+              <li>Buyer/seller qualification flow built in</li>
+              <li>Valuation request → instant callback booked</li>
+              <li>Landlord portal for letting agents</li>
+            </ul>
+          </div>
+          <div class="slide-mockup">
+            <div class="sm-bar">
+              <div class="sm-dot"></div><div class="sm-dot"></div><div class="sm-dot"></div>
+              <div class="sm-url">premierhomes.co.uk</div>
+            </div>
+            <div class="sm-hero-ea">
+              <h4>Find Your Perfect Property</h4>
+              <p>Serving London & Home Counties · 200+ Listings</p>
+              <div class="sm-search">
+                <span>Location, postcode or area...</span>
+                <div class="sm-search-btn">Search</div>
+              </div>
+            </div>
+            <div class="sm-prop-grid">
+              <div class="sm-prop">
+                <div class="sm-prop-img">🏠</div>
+                <div class="sm-prop-info">
+                  <div class="sm-prop-price">£485,000</div>
+                  <div class="sm-prop-addr">3 bed · Finchley, N3</div>
+                </div>
+              </div>
+              <div class="sm-prop">
+                <div class="sm-prop-img">🏢</div>
+                <div class="sm-prop-info">
+                  <div class="sm-prop-price">£325,000</div>
+                  <div class="sm-prop-addr">2 bed · Barnet, EN5</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 2: Letting Agent -->
+        <div class="slide">
+          <div class="slide-copy">
+            <div class="slide-niche">Letting Agent · Residential</div>
+            <h3>Lettings & Property Management</h3>
+            <p>Tenant management, landlord portal, maintenance requests, and automated rent reminders — all from one AI-connected website that works overnight.</p>
+            <ul class="slide-features">
+              <li>Tenant application portal — fully automated</li>
+              <li>Landlord dashboard with live occupancy data</li>
+              <li>Maintenance request → contractor dispatched automatically</li>
+              <li>Rent reminder sequence — no manual chasing</li>
+              <li>AST generation and digital signing</li>
+            </ul>
+          </div>
+          <div class="slide-mockup">
+            <div class="sm-bar">
+              <div class="sm-dot"></div><div class="sm-dot"></div><div class="sm-dot"></div>
+              <div class="sm-url">capitalresidue.co.uk/landlords</div>
+            </div>
+            <div class="sm-hero-ea" style="background:linear-gradient(135deg,rgba(13,148,136,.15),rgba(29,78,216,.1))">
+              <h4>Landlord Portal</h4>
+              <p>3 properties · £4,200/month managed</p>
+              <div class="sm-search" style="background:rgba(13,148,136,.1);border-color:rgba(13,148,136,.2)">
+                <span>All properties performing ✓</span>
+                <div class="sm-search-btn" style="background:var(--teal)">View</div>
+              </div>
+            </div>
+            <div class="sm-prop-grid">
+              <div class="sm-prop"><div class="sm-prop-img" style="background:linear-gradient(135deg,rgba(13,148,136,.3),rgba(29,78,216,.2))">🏢</div><div class="sm-prop-info"><div class="sm-prop-price" style="color:#10b981">Occupied</div><div class="sm-prop-addr">Flat 4 · SE1</div></div></div>
+              <div class="sm-prop"><div class="sm-prop-img" style="background:linear-gradient(135deg,rgba(245,200,66,.2),rgba(249,115,22,.1))">🏠</div><div class="sm-prop-info"><div class="sm-prop-price" style="color:var(--gold)">Let agreed</div><div class="sm-prop-addr">House · N12</div></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 3: Tradesperson -->
+        <div class="slide">
+          <div class="slide-copy">
+            <div class="slide-niche">Tradespeople · High Conversion</div>
+            <h3>Trades Business Website</h3>
+            <p>Designed to generate calls, capture leads from Google, and convert visitors into booked jobs. Trust signals, instant booking, and automated quotes — all connected.</p>
+            <ul class="slide-features">
+              <li>Emergency call button — instant AI response</li>
+              <li>Quote request form → auto-quote generated and sent</li>
+              <li>Gas Safe / NICEIC trust badges automated</li>
+              <li>Google Reviews widget — live and auto-updated</li>
+              <li>Before & after gallery with job descriptions</li>
+            </ul>
+          </div>
+          <div class="slide-mockup">
+            <div class="sm-bar">
+              <div class="sm-dot"></div><div class="sm-dot"></div><div class="sm-dot"></div>
+              <div class="sm-url">aceplumbers-london.co.uk</div>
+            </div>
+            <div class="sm-hero-tr">
+              <h4>⚡ Ace Plumbing & Heating</h4>
+              <p>Emergency call-outs 24/7 · Gas Safe Registered · London</p>
+              <div class="sm-trust-badges">
+                <div class="sm-trust-badge">Gas Safe ✓</div>
+                <div class="sm-trust-badge">4.9★ Google</div>
+                <div class="sm-trust-badge">200+ jobs</div>
+              </div>
+            </div>
+            <div style="padding:.8rem 1rem;display:flex;flex-direction:column;gap:.4rem">
+              <div style="background:rgba(255,255,255,.03);border-radius:6px;padding:.5rem .7rem;font-size:.7rem;color:var(--muted);display:flex;justify-content:space-between"><span>Boiler service quote</span><span style="color:var(--gold)">from £89</span></div>
+              <div style="background:rgba(255,255,255,.03);border-radius:6px;padding:.5rem .7rem;font-size:.7rem;color:var(--muted);display:flex;justify-content:space-between"><span>Emergency leak repair</span><span style="color:var(--gold)">call now</span></div>
+            </div>
+            <div class="sm-cta-strip">
+              <div class="sm-cta-btn cta-gold">📞 Get a Quote</div>
+              <div class="sm-cta-btn cta-ghost">View Services</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="slider-controls">
+        <button class="slider-btn" onclick="slide(-1)">‹</button>
+        <div class="slider-dots">
+          <div class="slider-dot active" id="dot-0"></div>
+          <div class="slider-dot" id="dot-1"></div>
+          <div class="slider-dot" id="dot-2"></div>
+        </div>
+        <button class="slider-btn" onclick="slide(1)">›</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="section pricing-section" id="pricing">
+  <div class="container">
+    <span class="s-tag">Investment</span>
+    <h2 class="s-h2">One platform.<br><em>Every function covered.</em></h2>
+    <p class="s-sub">Compare the cost of Morpheus to hiring even a single part-time admin. The maths are compelling.</p>
+
+    <div class="pricing-grid">
+      <!-- Foundation -->
+      <div class="price-card reveal">
+        <div class="price-tier">Foundation</div>
+        <div class="price-name">Digital Presence</div>
+        <p class="price-tagline">Your AI-powered website live and generating leads — connected to the Morpheus automation core.</p>
+        <div class="price-amount">
+          <span class="from">Setup from </span>
+          <span class="val">£2,500</span>
+        </div>
+        <div class="price-setup">+ £400/month management</div>
+        <hr class="price-divider">
+        <ul class="price-features">
+          <li><span class="pf-check">✓</span>AI-powered website (mobile-first, SEO-optimised)</li>
+          <li><span class="pf-check">✓</span>Lead capture + instant AI response</li>
+          <li><span class="pf-check">✓</span>Appointment booking automation</li>
+          <li><span class="pf-check">✓</span>Quote / enquiry auto-generation</li>
+          <li><span class="pf-check">✓</span>Google Review automation</li>
+          <li><span class="pf-check">✓</span>Monthly performance report</li>
+        </ul>
+        <a href="#contact" class="price-btn b-ghost">Get Started</a>
+      </div>
+
+      <!-- Growth — FEATURED -->
+      <div class="price-card featured reveal reveal-delay-1">
+        <div class="featured-pill">Most Popular</div>
+        <div class="price-tier">Growth</div>
+        <div class="price-name">Full Automation Stack</div>
+        <p class="price-tagline">The complete client acquisition and fulfilment engine — lead to paid client, handled in full.</p>
+        <div class="price-amount">
+          <span class="from">Setup from </span>
+          <span class="val">£5,500</span>
+        </div>
+        <div class="price-setup">+ £850/month management</div>
+        <hr class="price-divider">
+        <ul class="price-features">
+          <li><span class="pf-check">✓</span>Everything in Foundation</li>
+          <li><span class="pf-check">✓</span>Lead generation & scraping (targeted)</li>
+          <li><span class="pf-check">✓</span>Personalised outreach campaigns</li>
+          <li><span class="pf-check">✓</span>AI avatar qualification meeting</li>
+          <li><span class="pf-check">✓</span>Contract generation & e-sign integration</li>
+          <li><span class="pf-check">✓</span>Payment collection automation</li>
+          <li><span class="pf-check">✓</span>CRM + pipeline management</li>
+          <li><span class="pf-check">✓</span>Aftercare & onboarding sequences</li>
+        </ul>
+        <a href="#contact" class="price-btn b-purple">Get Started</a>
+      </div>
+
+      <!-- Enterprise -->
+      <div class="price-card reveal reveal-delay-2">
+        <div class="price-tier">Enterprise</div>
+        <div class="price-name">Full Autonomy</div>
+        <p class="price-tagline">Your entire operation runs without human input. Multi-agent AI stack with custom integrations and priority support.</p>
+        <div class="price-amount">
+          <span class="from">Setup from </span>
+          <span class="val">£12,000</span>
+        </div>
+        <div class="price-setup">+ £1,500/month management</div>
+        <hr class="price-divider">
+        <ul class="price-features">
+          <li><span class="pf-check">✓</span>Everything in Growth</li>
+          <li><span class="pf-check">✓</span>Virtual tour integration (estate agents)</li>
+          <li><span class="pf-check">✓</span>Custom AI avatar (branded to your business)</li>
+          <li><span class="pf-check">✓</span>Multi-branch / multi-location support</li>
+          <li><span class="pf-check">✓</span>API integrations (Rightmove, Zoopla, etc.)</li>
+          <li><span class="pf-check">✓</span>Dedicated account manager</li>
+          <li><span class="pf-check">✓</span>SLA response time: 2 hours</li>
+        </ul>
+        <a href="#contact" class="price-btn b-gold">Book a Call</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RESULTS -->
+<section class="section results-section">
+  <div class="container">
+    <span class="s-tag">What to Expect</span>
+    <h2 class="s-h2">Real outcomes.<br><em>Not empty promises.</em></h2>
+    <div class="results-grid">
+      <div class="result-card reveal">
+        <div class="result-metric">+340%</div>
+        <div class="result-label">More leads converted</div>
+        <p class="result-desc">Businesses using instant AI response see up to 340% more conversions vs manual follow-up. Speed wins.</p>
+      </div>
+      <div class="result-card reveal reveal-delay-1">
+        <div class="result-metric">18hrs</div>
+        <div class="result-label">Saved per week</div>
+        <p class="result-desc">The average business owner reclaims 18+ hours per week by removing manual admin from quotes, invoices, follow-ups, and scheduling.</p>
+      </div>
+      <div class="result-card reveal reveal-delay-2">
+        <div class="result-metric">60s</div>
+        <div class="result-label">Lead response time</div>
+        <p class="result-desc">Every lead responded to in under 60 seconds — day, night, weekend. You never miss another enquiry.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA / CONTACT -->
+<section class="section cta-section" id="contact">
+  <div class="cta-inner">
+    <h2 class="cta-h2">Ready to hand it over?</h2>
+    <p class="cta-p">Tell us about your business and we'll show you exactly what Morpheus can automate — no commitment, no fluff.</p>
+
+    <div class="cta-form" id="contactForm">
+      <div class="form-row">
+        <div class="fg">
+          <label for="f-name">Name</label>
+          <input id="f-name" type="text" placeholder="Your name" required>
+        </div>
+        <div class="fg">
+          <label for="f-biz">Business Name</label>
+          <input id="f-biz" type="text" placeholder="Your company">
+        </div>
+      </div>
+      <div class="fg">
+        <label for="f-email">Email</label>
+        <input id="f-email" type="email" placeholder="you@yourbusiness.com" required>
+      </div>
+      <div class="fg">
+        <label for="f-phone">Phone / WhatsApp</label>
+        <input id="f-phone" type="tel" placeholder="+44 ...">
+      </div>
+      <div class="fg">
+        <label for="f-industry">Industry</label>
+        <select id="f-industry" required>
+          <option value="">Select your industry...</option>
+          <optgroup label="Property">
+            <option>Estate Agent</option>
+            <option>Letting Agent</option>
+            <option>Property Developer</option>
+            <option>Mortgage Broker</option>
+          </optgroup>
+          <optgroup label="Trades">
+            <option>Plumber</option>
+            <option>Electrician</option>
+            <option>Builder / Contractor</option>
+            <option>Gas Engineer / HVAC</option>
+            <option>Other Trade</option>
+          </optgroup>
+          <optgroup label="Other Business">
+            <option>Solicitor / Legal</option>
+            <option>Accountant</option>
+            <option>Dental / Medical</option>
+            <option>Gym / Fitness</option>
+            <option>Other</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="fg">
+        <label for="f-bottleneck">What's your biggest bottleneck right now?</label>
+        <textarea id="f-bottleneck" placeholder="e.g. 'I miss too many leads' or 'I spend evenings on quotes' or 'I need more bookings'..."></textarea>
+      </div>
+      <button class="form-submit" id="submitBtn" onclick="handleSubmit(event)">Book a Free Demo Call →</button>
+      <p class="form-note" id="formNote">No sales pressure. No commitment. Just a 30-minute conversation about what's possible.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<div class="footer-wrap">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.7rem">
+        <div style="width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,#6d28d9,#1d4ed8);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;color:#fff">G</div>
+        <span style="font-weight:700;font-size:.95rem;color:#fff">GEM The Agency</span>
+      </div>
+      <p>AI-powered business automation for estate agents, letting agents, and self-employed trades. Built on Morpheus Intelligence.</p>
+    </div>
+    <div class="footer-col">
+      <h5>Services</h5>
+      <a href="#how-it-works">Lead Automation</a>
+      <a href="#how-it-works">Appointment Booking</a>
+      <a href="#how-it-works">E-Sign & Contracts</a>
+      <a href="#how-it-works">Payment Collection</a>
+    </div>
+    <div class="footer-col">
+      <h5>Industries</h5>
+      <a href="#niches">Estate Agents</a>
+      <a href="#niches">Letting Agents</a>
+      <a href="#niches">Plumbers</a>
+      <a href="#niches">Electricians</a>
+    </div>
+    <div class="footer-col">
+      <h5>Contact</h5>
+      <a href="mailto:morpheus@gemtheagency.com">morpheus@gemtheagency.com</a>
+      <a href="#contact">Book a Demo</a>
+      <a href="#pricing">View Pricing</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 Global Executive Marketing Limited trading as GEM The Agency</span>
+    <span>Powered by Morpheus Intelligence</span>
+  </div>
+</div>
+
+<script>
+// ── NAV SCROLL ────────────────────────────────────────────────────────────────
+window.addEventListener('scroll',()=>{
+  document.getElementById('nav').classList.toggle('solid',window.scrollY>80);
+});
+
+// ── REVEAL ────────────────────────────────────────────────────────────────────
+const obs = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});
+},{threshold:0.1});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+// ── NICHE TABS ────────────────────────────────────────────────────────────────
+function switchTab(idx){
+  document.querySelectorAll('.niche-tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+  document.querySelectorAll('.niche-panel').forEach((p,i)=>p.classList.toggle('active',i===idx));
+}
+
+// ── SLIDER ────────────────────────────────────────────────────────────────────
+let current=0;const total=3;
+function slide(dir){
+  current=(current+dir+total)%total;
+  document.getElementById('slidesTrack').style.transform=`translateX(-${current*100}%)`;
+  document.querySelectorAll('.slider-dot').forEach((d,i)=>d.classList.toggle('active',i===current));
+}
+// Auto-advance
+setInterval(()=>slide(1),5000);
+
+// ── FORM ──────────────────────────────────────────────────────────────────────
+async function handleSubmit(e){
+  e.preventDefault();
+  const btn=document.getElementById('submitBtn');
+  const note=document.getElementById('formNote');
+
+  const name=document.getElementById('f-name').value.trim();
+  const business=document.getElementById('f-biz').value.trim();
+  const email=document.getElementById('f-email').value.trim();
+  const phone=document.getElementById('f-phone').value.trim();
+  const industry=document.getElementById('f-industry').value;
+  const bottleneck=document.getElementById('f-bottleneck').value.trim();
+
+  if(!name||!email||!industry){
+    note.textContent='Please fill in your name, email and industry.';
+    note.style.color='#f87171';
+    return;
+  }
+
+  btn.textContent='Sending...';btn.disabled=true;btn.style.opacity='.7';
+
+  try{
+    const res=await fetch('/api/leads',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name,business,email,phone,industry,bottleneck})
+    });
+    const data=await res.json();
+    if(res.ok&&data.ok){
+      btn.textContent='✓ Received — we\'ll be in touch within 2 hours';
+      btn.style.background='linear-gradient(135deg,#059669,#10b981)';
+      btn.style.color='#fff';
+      note.textContent='Our team has been notified and will reach out to you shortly.';
+      note.style.color='#6ee7b7';
+      document.getElementById('contactForm').querySelectorAll('input,select,textarea').forEach(el=>el.disabled=true);
+    }else{
+      throw new Error(data.error||'Unknown error');
+    }
+  }catch(err){
+    btn.textContent='Book a Free Demo Call →';
+    btn.disabled=false;btn.style.opacity='1';
+    note.textContent='Something went wrong — please email us at morpheus@gemtheagency.com';
+    note.style.color='#fca5a5';
+  }
+}
+
+// ── TILT ON CARDS ─────────────────────────────────────────────────────────────
+document.querySelectorAll('.price-card,.j-card').forEach(el=>{
+  el.addEventListener('mousemove',e=>{
+    const r=el.getBoundingClientRect();
+    const x=(e.clientX-r.left)/r.width-.5;
+    const y=(e.clientY-r.top)/r.height-.5;
+    el.style.transform=`perspective(600px) rotateY(${x*7}deg) rotateX(${-y*5}deg) translateY(-4px)`;
+  });
+  el.addEventListener('mouseleave',()=>{ el.style.transform=''; });
+});
+</script>
+</body>
+</html>
