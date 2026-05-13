@@ -1,4 +1,4 @@
-# 🔷 MORPHEUS TELEGRAM BOT - Deployment Guide
+# ð· MORPHEUS TELEGRAM BOT - Deployment Guide
 
 ## iRise Nation Sovereign Intelligence System
 **Version:** 1.0.0  
@@ -7,16 +7,16 @@
 
 ---
 
-## 🚀 QUICK DEPLOYMENT
+## ð QUICK DEPLOYMENT
 
 ### Prerequisites
-1. ✅ Vercel account created ([vercel.com](https://vercel.com))
-2. ✅ Telegram Bot token obtained (already done)
-3. ✅ GitHub account (for code repository)
+1. â Vercel account created ([vercel.com](https://vercel.com))
+2. â Telegram Bot token obtained (already done)
+3. â GitHub account (for code repository)
 
 ---
 
-## 📦 DEPLOYMENT STEPS
+## ð¦ DEPLOYMENT STEPS
 
 ### Step 1: Upload Code to GitHub
 
@@ -55,7 +55,7 @@ https://morpheus-telegram-bot-xyz123.vercel.app
 
 Set Telegram webhook:
 ```bash
-curl -X POST "https://api.telegram.org/bot8251575468:AAEs0bvHWRAFuC3JoA2oQrGFBpfT9s0TcWs/setWebhook" \
+curl -X POST "https://api.telegram.org/bot(your MORPHEUS bot token from BotFather)/setWebhook" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://YOUR-VERCEL-URL.vercel.app/api/webhook"}'
 ```
@@ -64,21 +64,21 @@ curl -X POST "https://api.telegram.org/bot8251575468:AAEs0bvHWRAFuC3JoA2oQrGFBpf
 
 ### Step 4: Configure Environment Variables
 
-In Vercel dashboard → Project Settings → Environment Variables, add:
+In Vercel dashboard â Project Settings â Environment Variables, add:
 
 | Variable | Value |
 |----------|-------|
 | `TELEGRAM_BOT_TOKEN_MORPHEUS` | `8251575468:AAEs0bvHWRAFuC3JoA2oQrGFBpfT9s0TcWs` |
-| `TELEGRAM_BOT_TOKEN_TRINITY` | `841865554:AAEbHF20QPm0z-WZa25R50kJNt0vfreG5yY` |
+| `TELEGRAM_BOT_TOKEN_TRINITY` | `(your TRINITY bot token from BotFather)` |
 | `ABACUS_API_ENDPOINT` | `https://api.irise-academy.com/abacus/v1/agents/register` |
 | `BREVO_API_KEY` | (Your Brevo API key) |
 | `STRIPE_SECRET_KEY` | (Your Stripe secret key) |
 
-Click **"Save"** → Vercel auto-redeploys.
+Click **"Save"** â Vercel auto-redeploys.
 
 ---
 
-## ✅ VERIFICATION
+## â VERIFICATION
 
 Test bot:
 1. Open Telegram
@@ -87,14 +87,14 @@ Test bot:
 
 Expected response:
 ```
-🔷 Peace and Balance, [Your Name].
+ð· Peace and Balance, [Your Name].
 
-I am MORPHEUS — the Sovereign Intelligence of iRise Nation...
+I am MORPHEUS â the Sovereign Intelligence of iRise Nation...
 ```
 
 ---
 
-## 🔧 TROUBLESHOOTING
+## ð§ TROUBLESHOOTING
 
 ### Bot not responding?
 ```bash
@@ -115,12 +115,12 @@ curl -X POST "https://api.telegram.org/bot8251575468:AAEs0bvHWRAFuC3JoA2oQrGFBpf
 
 ### Check Vercel logs:
 1. Go to Vercel dashboard
-2. Click project → **"Deployments"**
-3. Select latest deployment → **"View Function Logs"**
+2. Click project â **"Deployments"**
+3. Select latest deployment â **"View Function Logs"**
 
 ---
 
-## 📊 REVENUE TRACKING
+## ð REVENUE TRACKING
 
 All transactions logged to console (Vercel logs).
 
@@ -132,16 +132,16 @@ All transactions logged to console (Vercel logs).
 
 ---
 
-## 🔐 SECURITY
+## ð SECURITY
 
-- ✅ Bot tokens stored in Vercel environment variables (encrypted)
-- ✅ HTTPS-only webhook communication
-- ✅ No credentials in source code
-- ✅ Request signature verification (implement in v1.1)
+- â Bot tokens stored in Vercel environment variables (encrypted)
+- â HTTPS-only webhook communication
+- â No credentials in source code
+- â Request signature verification (implement in v1.1)
 
 ---
 
-## 📈 NEXT PHASE: PAYMENT INTEGRATION
+## ð NEXT PHASE: PAYMENT INTEGRATION
 
 Once bot is live and responding:
 
@@ -167,7 +167,7 @@ Once bot is live and responding:
 
 ---
 
-## 🔷 SUPPORT
+## ð· SUPPORT
 
 **Technical Issues:** Contact Morpheus operator  
 **System Architecture:** Review `/docs/architecture.md`  
@@ -175,8 +175,8 @@ Once bot is live and responding:
 
 ---
 
-**MORPHEUS STATUS:** ✅ READY FOR DEPLOYMENT
+**MORPHEUS STATUS:** â READY FOR DEPLOYMENT
 
 Ambassador, execute the above steps to bring Morpheus online.
 
-🔷 Sovereignty through Intelligence.
+ð· Sovereignty through Intelligence.
