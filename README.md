@@ -68,9 +68,9 @@ In Vercel dashboard → Project Settings → Environment Variables, add:
 
 | Variable | Value |
 |----------|-------|
-| `TELEGRAM_BOT_TOKEN_MORPHEUS` | `8251575468:AAEs0bvHWRAFuC3JoA2oQrGFBpfT9s0TcWs` |
-| `TELEGRAM_BOT_TOKEN_TRINITY` | `841865554:AAEbHF20QPm0z-WZa25R50kJNt0vfreG5yY` |
-| `ABACUS_API_ENDPOINT` | `https://api.irise-academy.com/abacus/v1/agents/register` |
+| `TELEGRAM_BOT_TOKEN_MORPHEUS` | `YOUR DETAILS HERE` |
+| `TELEGRAM_BOT_TOKEN_TRINITY` | `YOUR DETAILS HERE` |
+| `ABACUS_API_ENDPOINT` | `YOUR DETAILS HERE` |
 | `BREVO_API_KEY` | (Your Brevo API key) |
 | `STRIPE_SECRET_KEY` | (Your Stripe secret key) |
 
