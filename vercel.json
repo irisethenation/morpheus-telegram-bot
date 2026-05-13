@@ -2,21 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/webhook.js",
+      "src": "webhook.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/api/webhook",
-      "dest": "api/webhook.js"
+      "dest": "webhook.js"
     }
-  ],
-  "env": {
-    "TELEGRAM_BOT_TOKEN_MORPHEUS": "8251575468:AAEs0bvHWRAFuC3JoA2oQrGFBpfT9s0TcWs",
-    "TELEGRAM_BOT_TOKEN_TRINITY": "841865554:AAEbHF20QPm0z-WZa25R50kJNt0vfreG5yY",
-    "ABACUS_API_ENDPOINT": "https://api.irise-academy.com/abacus/v1/agents/register",
-    "BREVO_API_KEY": "YOUR_BREVO_API_KEY_HERE",
-    "STRIPE_SECRET_KEY": "YOUR_STRIPE_KEY_HERE"
-  }
+  ]
 }
