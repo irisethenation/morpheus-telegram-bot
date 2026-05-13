@@ -1,4 +1,4 @@
-# ð· MORPHEUS TELEGRAM BOT - Deployment Guide
+# Ã°ÂÂÂ· MORPHEUS TELEGRAM BOT - Deployment Guide
 
 ## iRise Nation Sovereign Intelligence System
 **Version:** 1.0.0  
@@ -7,16 +7,16 @@
 
 ---
 
-## ð QUICK DEPLOYMENT
+## Ã°ÂÂÂ QUICK DEPLOYMENT
 
 ### Prerequisites
-1. â Vercel account created ([vercel.com](https://vercel.com))
-2. â Telegram Bot token obtained (already done)
-3. â GitHub account (for code repository)
+1. Ã¢ÂÂ Vercel account created ([vercel.com](https://vercel.com))
+2. Ã¢ÂÂ Telegram Bot token obtained (already done)
+3. Ã¢ÂÂ GitHub account (for code repository)
 
 ---
 
-## ð¦ DEPLOYMENT STEPS
+## Ã°ÂÂÂ¦ DEPLOYMENT STEPS
 
 ### Step 1: Upload Code to GitHub
 
@@ -64,21 +64,21 @@ curl -X POST "https://api.telegram.org/bot(your MORPHEUS bot token from BotFathe
 
 ### Step 4: Configure Environment Variables
 
-In Vercel dashboard â Project Settings â Environment Variables, add:
+In Vercel dashboard Ã¢ÂÂ Project Settings Ã¢ÂÂ Environment Variables, add:
 
 | Variable | Value |
 |----------|-------|
-| `TELEGRAM_BOT_TOKEN_MORPHEUS` | `8251575468:AAEs0bvHWRAFuC3JoA2oQrGFBpfT9s0TcWs` |
+| `TELEGRAM_BOT_TOKEN_MORPHEUS` | `(your MORPHEUS bot token from BotFather)` |
 | `TELEGRAM_BOT_TOKEN_TRINITY` | `(your TRINITY bot token from BotFather)` |
 | `ABACUS_API_ENDPOINT` | `https://api.irise-academy.com/abacus/v1/agents/register` |
 | `BREVO_API_KEY` | (Your Brevo API key) |
 | `STRIPE_SECRET_KEY` | (Your Stripe secret key) |
 
-Click **"Save"** â Vercel auto-redeploys.
+Click **"Save"** Ã¢ÂÂ Vercel auto-redeploys.
 
 ---
 
-## â VERIFICATION
+## Ã¢ÂÂ VERIFICATION
 
 Test bot:
 1. Open Telegram
@@ -87,40 +87,40 @@ Test bot:
 
 Expected response:
 ```
-ð· Peace and Balance, [Your Name].
+Ã°ÂÂÂ· Peace and Balance, [Your Name].
 
-I am MORPHEUS â the Sovereign Intelligence of iRise Nation...
+I am MORPHEUS Ã¢ÂÂ the Sovereign Intelligence of iRise Nation...
 ```
 
 ---
 
-## ð§ TROUBLESHOOTING
+## Ã°ÂÂÂ§ TROUBLESHOOTING
 
 ### Bot not responding?
 ```bash
 # Check webhook status:
-curl "https://api.telegram.org/bot8251575468:AAEs0bvHWRAFuC3JoA2oQrGFBpfT9s0TcWs/getWebhookInfo"
+curl "https://api.telegram.org/bot(your MORPHEUS bot token from BotFather)/getWebhookInfo"
 ```
 
 ### Webhook not set?
 ```bash
 # Delete old webhook:
-curl -X POST "https://api.telegram.org/bot8251575468:AAEs0bvHWRAFuC3JoA2oQrGFBpfT9s0TcWs/deleteWebhook"
+curl -X POST "https://api.telegram.org/bot(your MORPHEUS bot token from BotFather)/deleteWebhook"
 
 # Set new webhook:
-curl -X POST "https://api.telegram.org/bot8251575468:AAEs0bvHWRAFuC3JoA2oQrGFBpfT9s0TcWs/setWebhook" \
+curl -X POST "https://api.telegram.org/bot(your MORPHEUS bot token from BotFather)/setWebhook" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://YOUR-VERCEL-URL.vercel.app/api/webhook"}'
 ```
 
 ### Check Vercel logs:
 1. Go to Vercel dashboard
-2. Click project â **"Deployments"**
-3. Select latest deployment â **"View Function Logs"**
+2. Click project Ã¢ÂÂ **"Deployments"**
+3. Select latest deployment Ã¢ÂÂ **"View Function Logs"**
 
 ---
 
-## ð REVENUE TRACKING
+## Ã°ÂÂÂ REVENUE TRACKING
 
 All transactions logged to console (Vercel logs).
 
@@ -132,16 +132,16 @@ All transactions logged to console (Vercel logs).
 
 ---
 
-## ð SECURITY
+## Ã°ÂÂÂ SECURITY
 
-- â Bot tokens stored in Vercel environment variables (encrypted)
-- â HTTPS-only webhook communication
-- â No credentials in source code
-- â Request signature verification (implement in v1.1)
+- Ã¢ÂÂ Bot tokens stored in Vercel environment variables (encrypted)
+- Ã¢ÂÂ HTTPS-only webhook communication
+- Ã¢ÂÂ No credentials in source code
+- Ã¢ÂÂ Request signature verification (implement in v1.1)
 
 ---
 
-## ð NEXT PHASE: PAYMENT INTEGRATION
+## Ã°ÂÂÂ NEXT PHASE: PAYMENT INTEGRATION
 
 Once bot is live and responding:
 
@@ -167,7 +167,7 @@ Once bot is live and responding:
 
 ---
 
-## ð· SUPPORT
+## Ã°ÂÂÂ· SUPPORT
 
 **Technical Issues:** Contact Morpheus operator  
 **System Architecture:** Review `/docs/architecture.md`  
@@ -175,8 +175,8 @@ Once bot is live and responding:
 
 ---
 
-**MORPHEUS STATUS:** â READY FOR DEPLOYMENT
+**MORPHEUS STATUS:** Ã¢ÂÂ READY FOR DEPLOYMENT
 
 Ambassador, execute the above steps to bring Morpheus online.
 
-ð· Sovereignty through Intelligence.
+Ã°ÂÂÂ· Sovereignty through Intelligence.
