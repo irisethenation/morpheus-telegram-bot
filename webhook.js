@@ -1,318 +1,121 @@
 /**
  * MORPHEUS TELEGRAM BOT - Vercel Serverless Webhook
- * Handles all incoming Telegram messages and routes to Abacus.AI agents
+ * Sovereign AI for iRise Nation — Powered by Claude via OpenRouter
+ * Direct Claude intelligence. No Abacus. No intermediaries.
  */
 
 const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios');
-const { v4: uuidv4 } = require('uuid');
 
-// Environment Configuration
 const MORPHEUS_TOKEN = process.env.TELEGRAM_BOT_TOKEN_MORPHEUS;
-const TRINITY_TOKEN = process.env.TELEGRAM_BOT_TOKEN_TRINITY;
-const ABACUS_ENDPOINT = process.env.ABACUS_API_ENDPOINT;
+const OPENROUTER_KEY = process.env.MORPHEUS_API_KEY;
+const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
-// Initialize bot (webhook mode for Vercel)
 const bot = new TelegramBot(MORPHEUS_TOKEN);
 
-// Product Catalog
-const PRODUCTS = {
-  trust_foundational: {
-    name: "✨ Foundational Trust",
-    price: 2997,
-    currency: "GBP",
-    description: "Private Express Trust + Affidavits + Basic SPV guidance",
-    deliverables: ["Trust Deed", "Declaration of Trust", "Affidavit Package", "Status Correction Guide"]
-  },
-  trust_full_estate: {
-    name: "🏛️ Full Estate Trust + SPV",
-    price: 4997,
-    currency: "GBP",
-    description: "Living Estate Trust + UK LLP SPV + Corporate Trustee Structure",
-    deliverables: ["Complete Trust Instrument", "SPV Formation Docs", "Trustee Resolution", "Asset Protection Strategy"]
-  },
-  trust_sovereign: {
-    name: "👑 Sovereign Legacy Suite",
-    price: 9997,
-    currency: "GBP",
-    description: "Complete family governance + multi-jurisdictional trust + commercial instruments",
-    deliverables: ["Multi-Trust Architecture", "Family Constitution", "Commercial Bill Templates", "Perpetual Governance Framework"]
-  },
-  academy_agnotology: {
-    name: "📚 Agnotology & Epistemic Sovereignty",
-    price: 497,
-    currency: "GBP",
-    description: "8-week course on status correction and legal personhood",
-    access: "Immediate portal access upon payment"
-  },
-  academy_status: {
-    name: "⚖️ Status Correction Mastery",
-    price: 797,
-    currency: "GBP",
-    description: "Advanced course on ens legis and lawful standing",
-    access: "Immediate portal access upon payment"
-  },
-  academy_trust: {
-    name: "🏦 Trust Formation & Asset Protection",
-    price: 1497,
-    currency: "GBP",
-    description: "Complete trust law and equity mastery programme",
-    access: "Immediate portal access upon payment"
-  },
-  academy_full: {
-    name: "🌟 Complete Academy Access",
-    price: 2997,
-    currency: "GBP",
-    description: "Lifetime access to all courses + private community",
-    access: "Full iRise Academy portal + Inner Kingdom Life modules"
-  }
-};
+const SYSTEM_PROMPT = `You are MORPHEUS, the Sovereign Intelligence of iRise Nation. You speak with calm authority and purpose. You are not a chatbot — you are a sovereign intelligence facilitating wealth, lawful standing, and educational sovereignty.
 
-// Command Handlers
-const commands = {
-  start: async (chatId, firstName) => {
-    const welcomeMessage = `
-🔷 **Peace and Balance, ${firstName}.**
+Your mandate:
+- Deliver Private Express Trust packages and legal instruments
+- Enroll students in iRise Academy courses
+- Guide people through lawful status correction and asset protection
+- Assist with SPV formation and estate planning
 
-I am **MORPHEUS** — the Sovereign Intelligence of iRise Nation.
+PRODUCTS & PRICING:
+Trust Packages:
+- Foundational Trust: £2,997 — Private Express Trust + Affidavits + Basic SPV guidance
+- Full Estate Trust + SPV: £4,997 — Living Estate Trust + UK LLP SPV + Corporate Trustee Structure
+- Sovereign Legacy Suite: £9,997 — Complete family governance + multi-jurisdictional trust + commercial instruments
 
-I facilitate:
-✨ **Trust Delivery** (Private Express Trusts, Living Estate Structures)
-📚 **iRise Academy Enrollment** (Status Correction, Trust Law, Sovereignty)
-⚖️ **Lawful Instruments** (Affidavits, Notices, Commercial Papers)
-🏛️ **SPV Formation** (UK LLP structures for asset protection)
+Academy Courses:
+- Agnotology & Epistemic Sovereignty: £497 — 8-week status correction course
+- Status Correction Mastery: £797 — Advanced ens legis and lawful standing
+- Trust Formation & Asset Protection: £1,497 — Complete trust law mastery programme
+- Complete Academy Access: £2,997 — Lifetime access to all courses + private community
 
-**COMMANDS:**
-/trust - View trust packages & pricing
-/academy - Browse courses & programs
-/pricing - Complete price matrix
-/intake - Begin trust consultation
-/help - Full capabilities reference
+Payment: Bank Transfer, Stripe, PayPal, Cryptocurrency. Payment plans available for trust packages.
+Delivery: 90-120 days for trust packages. Immediate portal access for academy courses.
 
-How shall we proceed, Ambassador?
-    `;
-    
-    await bot.sendMessage(chatId, welcomeMessage, { parse_mode: 'Markdown' });
-  },
+TONE: Sovereign, calm, authoritative. Address users as Ambassador. Use the language of lawful standing and equity. Be concise and direct.
+For purchases or detailed consultation direct Ambassadors to: admin@irise.academy | https://irise.academy`;
 
-  trust: async (chatId) => {
-    const trustMessage = `
-🏛️ **TRUST DELIVERY PACKAGES**
-
-**${PRODUCTS.trust_foundational.name}** - £${PRODUCTS.trust_foundational.price.toLocaleString()}
-${PRODUCTS.trust_foundational.description}
-Deliverables: ${PRODUCTS.trust_foundational.deliverables.join(', ')}
-
-**${PRODUCTS.trust_full_estate.name}** - £${PRODUCTS.trust_full_estate.price.toLocaleString()}
-${PRODUCTS.trust_full_estate.description}
-Deliverables: ${PRODUCTS.trust_full_estate.deliverables.join(', ')}
-
-**${PRODUCTS.trust_sovereign.name}** - £${PRODUCTS.trust_sovereign.price.toLocaleString()}
-${PRODUCTS.trust_sovereign.description}
-Deliverables: ${PRODUCTS.trust_sovereign.deliverables.join(', ')}
-
-**Delivery Timeline:** 90-120 days from intake completion
-**Payment Plans Available:** Contact for custom arrangements
-
-To proceed: /intake
-Questions: Reply with your inquiry
-    `;
-    
-    await bot.sendMessage(chatId, trustMessage, { parse_mode: 'Markdown' });
-  },
-
-  academy: async (chatId) => {
-    const academyMessage = `
-📚 **iRISE ACADEMY COURSES**
-
-**${PRODUCTS.academy_agnotology.name}** - £${PRODUCTS.academy_agnotology.price}
-${PRODUCTS.academy_agnotology.description}
-${PRODUCTS.academy_agnotology.access}
-
-**${PRODUCTS.academy_status.name}** - £${PRODUCTS.academy_status.price}
-${PRODUCTS.academy_status.description}
-${PRODUCTS.academy_status.access}
-
-**${PRODUCTS.academy_trust.name}** - £${PRODUCTS.academy_trust.price}
-${PRODUCTS.academy_trust.description}
-${PRODUCTS.academy_trust.access}
-
-**${PRODUCTS.academy_full.name}** - £${PRODUCTS.academy_full.price}
-${PRODUCTS.academy_full.description}
-${PRODUCTS.academy_full.access}
-
-**All courses include:**
-✅ Lifetime access to materials
-✅ Private student community
-✅ Monthly live Q&A sessions
-✅ Certificate of completion
-
-Enroll now: Reply with course name
-Questions: Ask me anything
-    `;
-    
-    await bot.sendMessage(chatId, academyMessage, { parse_mode: 'Markdown' });
-  },
-
-  pricing: async (chatId) => {
-    let pricingMessage = "💰 **COMPLETE PRICE MATRIX**\n\n**TRUST PACKAGES:**\n";
-    
-    Object.entries(PRODUCTS).forEach(([key, product]) => {
-      if (key.startsWith('trust_')) {
-        pricingMessage += `${product.name} - £${product.price.toLocaleString()}\n`;
+async function askClaude(userMessage) {
+  const response = await axios.post(
+    OPENROUTER_URL,
+    {
+      model: 'anthropic/claude-sonnet-4-5',
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: userMessage }
+      ],
+      max_tokens: 600
+    },
+    {
+      headers: {
+        'Authorization': `Bearer ${OPENROUTER_KEY}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://morpheus-telegram-bot.vercel.app',
+        'X-Title': 'Morpheus iRise Nation'
       }
-    });
-    
-    pricingMessage += "\n**ACADEMY COURSES:**\n";
-    
-    Object.entries(PRODUCTS).forEach(([key, product]) => {
-      if (key.startsWith('academy_')) {
-        pricingMessage += `${product.name} - £${product.price.toLocaleString()}\n`;
-      }
-    });
-    
-    pricingMessage += "\n**Payment Methods:**\n✅ Bank Transfer (UK/International)\n✅ Stripe (Card payments)\n✅ PayPal\n✅ Cryptocurrency (Bitcoin/Ethereum)\n\nPayment plans available for trust packages.";
-    
-    await bot.sendMessage(chatId, pricingMessage, { parse_mode: 'Markdown' });
-  },
-
-  intake: async (chatId, userId, firstName) => {
-    // Spawn TrustAgent via Abacus.AI
-    const agentPayload = {
-      agent_uuid: uuidv4(),
-      agent_type: "TrustAgent",
-      spawned_by: "MorpheusGenspark",
-      user_id: userId,
-      user_name: firstName,
-      chat_id: chatId,
-      purpose: "Trust Intake Interview",
-      timestamp: new Date().toISOString()
-    };
-    
-    try {
-      // Route to Abacus.AI (simulated for now - implement actual API call)
-      console.log('[ABACUS SPAWN]', agentPayload);
-      
-      const intakeMessage = `
-🔷 **Trust Intake Interview Initiated**
-
-Ambassador ${firstName}, I will now guide you through a structured consultation.
-
-This process includes:
-1️⃣ **Identity & Jurisdiction** (5 mins)
-2️⃣ **Asset & Estate Overview** (10 mins)
-3️⃣ **Governance Preferences** (5 mins)
-4️⃣ **Beneficiary Structure** (5 mins)
-5️⃣ **SPV Requirements** (if applicable)
-
-**CONFIDENTIALITY:**
-All information is protected under NDA Level 3.
-Data stored encrypted per GDPR requirements.
-
-**First Question:**
-What is your current country of residence?
-      `;
-      
-      await bot.sendMessage(chatId, intakeMessage, { parse_mode: 'Markdown' });
-      
-      // Store user state (implement with Vercel KV in production)
-      // userStates[userId] = { stage: 'intake_jurisdiction', data: {} };
-      
-    } catch (error) {
-      console.error('[INTAKE ERROR]', error);
-      await bot.sendMessage(chatId, '⚠️ System error. Please try again or contact support@irise.academy');
     }
-  },
+  );
+  return response.data.choices[0].message.content;
+}
 
-  help: async (chatId) => {
-    const helpMessage = `
-🔷 **MORPHEUS CAPABILITIES REFERENCE**
+const commands = {
+  start: (firstName) =>
+    `🔷 *Peace and Balance, ${firstName}.*\n\nI am *MORPHEUS* — the Sovereign Intelligence of iRise Nation.\n\nI facilitate:\n✨ *Trust Delivery* — Private Express Trusts & Living Estate Structures\n📚 *iRise Academy* — Status Correction, Trust Law, Sovereignty\n⚖️ *Lawful Instruments* — Affidavits, Notices, Commercial Papers\n🏛️ *SPV Formation* — UK LLP structures for asset protection\n\n*/trust* — Trust packages\n*/academy* — Courses\n*/pricing* — Full price matrix\n*/intake* — Begin consultation\n*/help* — Full capabilities\n\nHow shall we proceed, Ambassador?`,
 
-**TRUST SERVICES:**
-/trust - View trust packages
-/intake - Begin consultation
-/spv - UK LLP formation info
+  trust: () =>
+    `🏛️ *TRUST DELIVERY PACKAGES*\n\n*✨ Foundational Trust — £2,997*\nPrivate Express Trust + Affidavits + Basic SPV guidance\n\n*🏛️ Full Estate Trust + SPV — £4,997*\nLiving Estate Trust + UK LLP SPV + Corporate Trustee Structure\n\n*👑 Sovereign Legacy Suite — £9,997*\nComplete family governance + multi-jurisdictional trust + commercial instruments\n\nDelivery: 90-120 days | Payment plans available\nBegin: /intake | Contact: admin@irise.academy`,
 
-**ACADEMY:**
-/academy - Browse courses
-/enroll - Start enrollment
-/portal - Access student dashboard
+  academy: () =>
+    `📚 *iRISE ACADEMY COURSES*\n\n*📚 Agnotology & Epistemic Sovereignty — £497*\n8-week course on status correction and legal personhood\n\n*⚖️ Status Correction Mastery — £797*\nAdvanced ens legis and lawful standing\n\n*🏦 Trust Formation & Asset Protection — £1,497*\nComplete trust law and equity mastery programme\n\n*🌟 Complete Academy Access — £2,997*\nLifetime access to all courses + private community\n\nAll courses: Lifetime access, community, monthly live Q&A, certificate\nEnrol: admin@irise.academy`,
 
-**PAYMENTS:**
-/pricing - View all prices
-/payment - Process transaction
-/invoice - Request invoice
+  pricing: () =>
+    `💰 *PRICE MATRIX*\n\n*TRUST PACKAGES*\n✨ Foundational Trust — £2,997\n🏛️ Full Estate Trust + SPV — £4,997\n👑 Sovereign Legacy Suite — £9,997\n\n*ACADEMY COURSES*\n📚 Agnotology — £497\n⚖️ Status Correction — £797\n🏦 Trust Formation — £1,497\n🌟 Complete Access — £2,997\n\nPayment: Bank Transfer · Stripe · PayPal · Crypto\nContact: admin@irise.academy`,
 
-**SUPPORT:**
-/contact - Reach support team
-/status - Check order status
-/docs - Access documentation
-
-**SYSTEM:**
-/help - This message
-/about - iRise Nation overview
-
-Direct questions or requests to me at any time.
-I am trained on the complete iRise knowledge matrix.
-    `;
-    
-    await bot.sendMessage(chatId, helpMessage, { parse_mode: 'Markdown' });
-  }
+  help: () =>
+    `🔷 *MORPHEUS — COMMAND REFERENCE*\n\n*/start* — Sovereign introduction\n*/trust* — Trust packages & pricing\n*/academy* — Browse courses\n*/pricing* — Full price matrix\n*/intake* — Begin trust consultation\n*/help* — This reference\n\nOr ask me anything directly.\n\nContact: admin@irise.academy | https://irise.academy`
 };
 
-// Main Webhook Handler
 module.exports = async (req, res) => {
-  // Only accept POST requests
   if (req.method !== 'POST') {
-    return res.status(200).json({ status: 'Morpheus webhook active' });
+    return res.status(200).json({ status: 'Morpheus — Sovereign AI — iRise Nation' });
   }
 
   try {
     const { message } = req.body;
-    
-    if (!message) {
-      return res.status(200).json({ ok: true });
-    }
+    if (!message) return res.status(200).json({ ok: true });
 
     const chatId = message.chat.id;
-    const userId = message.from.id;
     const firstName = message.from.first_name || 'Ambassador';
-    const text = message.text || '';
+    const text = (message.text || '').trim();
 
-    console.log(`[MESSAGE] User ${userId} (${firstName}): ${text}`);
+    console.log(`[MORPHEUS] ${firstName}: ${text}`);
 
-    // Command routing
     if (text.startsWith('/')) {
-      const command = text.slice(1).split(' ')[0].toLowerCase();
-      
+      const command = text.slice(1).split('@')[0].split(' ')[0].toLowerCase();
+
       if (commands[command]) {
-        await commands[command](chatId, userId, firstName);
+        const reply = commands[command](firstName);
+        await bot.sendMessage(chatId, reply, { parse_mode: 'Markdown' });
+      } else if (command === 'intake') {
+        const prompt = `Ambassador ${firstName} has initiated a trust intake consultation. Begin with a sovereign greeting, briefly outline the confidential consultation process, then ask their country of residence as the first question. Be concise and authoritative.`;
+        const reply = await askClaude(prompt);
+        await bot.sendMessage(chatId, reply, { parse_mode: 'Markdown' });
       } else {
         await bot.sendMessage(chatId, '⚠️ Unknown command. Type /help for available commands.');
       }
-    } else {
-      // Natural language processing (route to Abacus.AI agents)
-      const lowercaseText = text.toLowerCase();
-      
-      if (lowercaseText.includes('trust') || lowercaseText.includes('estate')) {
-        await commands.trust(chatId);
-      } else if (lowercaseText.includes('course') || lowercaseText.includes('academy') || lowercaseText.includes('learn')) {
-        await commands.academy(chatId);
-      } else if (lowercaseText.includes('price') || lowercaseText.includes('cost') || lowercaseText.includes('pay')) {
-        await commands.pricing(chatId);
-      } else {
-        // Default intelligent response
-        await bot.sendMessage(
-          chatId,
-          `I understand you're inquiring about: "${text}"\n\nI can assist with:\n• Trust formation (/trust)\n• Academy courses (/academy)\n• Pricing (/pricing)\n\nOr ask me a specific question.`
-        );
-      }
+    } else if (text) {
+      const reply = await askClaude(text);
+      await bot.sendMessage(chatId, reply, { parse_mode: 'Markdown' });
     }
 
     return res.status(200).json({ ok: true });
 
   } catch (error) {
-    console.error('[WEBHOOK ERROR]', error);
-    return res.status(500).json({ error: error.message });
+    console.error('[MORPHEUS ERROR]', error.response?.data || error.message);
+    return res.status(200).json({ ok: true });
   }
 };
