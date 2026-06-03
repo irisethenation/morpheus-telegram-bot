@@ -1,0 +1,88 @@
+# ─── Flow 09: Consultation Booking ───────────────────────────────────────────
+# Triggered when a user completes the intake conversation and requests a
+# consultation call. The bot can POST to this flow with the user's availability.
+#
+# You can also use this flow as the destination for a Calendly/Cal.com webhook
+# to handle all booking confirmations and reminders from one place.
+#
+# Vercel env var:  FLOW_WEBHOOK_CONSULTATION  (set in .env.automatisch)
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: "09 — Consultation Booking"
+description: "Send booking link, confirmation, and reminders for intake calls"
+active: true
+
+trigger:
+  app: webhook
+  event: newWebhookPayloadReceived
+  name: "Intake complete — consultation requested"
+
+  # Incoming payload fields:
+  # {
+  #   chatId:       <number>
+  #   firstName:    <string>
+  #   email:        <string|null>
+  #   username:     <string|null>
+  #   country:      <string|null>
+  #   interest:     <string|null>   "trust"|"academy"|"both"
+  #   bookingUrl:   <string|null>   Calendly booking URL if pre-generated
+  #   _source:      "morpheus-bot"
+  #   _ts:          ISO timestamp
+  # }
+
+actions:
+
+  # Step 1 — Send booking link email
+  # Add filter: trigger.body.email is not empty
+  - step: 1
+    app: brevo
+    event: sendTransactionalEmail
+    name: "Brevo — Send Calendly Booking Link"
+    parameters:
+      templateId: "{{env.BREVO_CONSULTATION_TEMPLATE_ID}}"
+      to:
+        - email: "{{trigger.body.email}}"
+          name:  "{{trigger.body.firstName}}"
+      params:
+        firstName:  "{{trigger.body.firstName}}"
+        bookingUrl: "https://calendly.com/irise-academy/consultation"
+        interest:   "{{trigger.body.interest}}"
+
+  # Step 2 — Notify admin on Telegram
+  - step: 2
+    app: telegram
+    event: sendMessage
+    name: "Telegram — Alert Admin: Consultation Requested"
+    parameters:
+      chat_id: "{{env.ADMIN_TELEGRAM_CHAT_ID}}"
+      text: |
+        📅 *CONSULTATION REQUESTED*
+        Name: {{trigger.body.firstName}}
+        Email: {{trigger.body.email}}
+        @{{trigger.body.username}}
+        Country: {{trigger.body.country}}
+        Interest: {{trigger.body.interest}}
+        Telegram ID: {{trigger.body.chatId}}
+        Time: {{trigger.body._ts}}
+
+        Calendly: https://calendly.com/irise-academy/consultation
+      parse_mode: "Markdown"
+
+  # Step 3 — Send Telegram message with booking link (if no email yet)
+  # Add filter: trigger.body.chatId is not empty
+  - step: 3
+    app: telegram
+    event: sendMessage
+    name: "Telegram — Send Booking Link to User"
+    parameters:
+      chat_id: "{{trigger.body.chatId}}"
+      text: |
+        📅 *Schedule Your Consultation, Ambassador {{trigger.body.firstName}}*
+
+        Book your sovereign consultation here:
+        https://calendly.com/irise-academy/consultation
+
+        Our team will confirm your slot within 24 hours.
+
+        admin@irise.academy | https://irise.academy
+      parse_mode: "Markdown"

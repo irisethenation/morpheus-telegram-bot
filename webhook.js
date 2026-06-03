@@ -2,18 +2,72 @@
  * MORPHEUS TELEGRAM BOT — Vercel Serverless Webhook
  * Sovereign AI for iRise Nation — Powered by Claude via OpenRouter
  * Routing: ?bot=morpheus (sales/trust) | ?bot=trinity (onboarding/profiling)
+ * Automation: Automatisch micro-task workflow triggers
  */
 
 const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios');
 
-const MORPHEUS_TOKEN = process.env.TELEGRAM_BOT_TOKEN_MORPHEUS;
-const TRINITY_TOKEN = process.env.TELEGRAM_BOT_TOKEN_TRINITY;
-const OPENROUTER_KEY = process.env.MORPHEUS_API_KEY;
-const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const MORPHEUS_TOKEN  = process.env.TELEGRAM_BOT_TOKEN_MORPHEUS;
+const TRINITY_TOKEN   = process.env.TELEGRAM_BOT_TOKEN_TRINITY;
+const OPENROUTER_KEY  = process.env.MORPHEUS_API_KEY;
+const OPENROUTER_URL  = 'https://openrouter.ai/api/v1/chat/completions';
 
 const morpheusBot = new TelegramBot(MORPHEUS_TOKEN);
-const trinityBot = new TelegramBot(TRINITY_TOKEN);
+const trinityBot  = new TelegramBot(TRINITY_TOKEN);
+
+// ─── AUTOMATISCH MICRO-TASK FLOW TRIGGERS ─────────────────────────────────────
+const AUTOMATISCH_SECRET = process.env.AUTOMATISCH_WEBHOOK_SECRET || '';
+
+const FLOW_WEBHOOKS = {
+  contactCapture: process.env.FLOW_WEBHOOK_CONTACT_CAPTURE,
+  intake:         process.env.FLOW_WEBHOOK_INTAKE,
+  trustInquiry:   process.env.FLOW_WEBHOOK_TRUST_INQUIRY,
+  academyInquiry: process.env.FLOW_WEBHOOK_ACADEMY_INQUIRY,
+  adminAlert:     process.env.FLOW_WEBHOOK_ADMIN_ALERT,
+};
+
+const HIGH_VALUE_KEYWORDS = [
+  'purchase', 'buy', 'payment', 'pay', 'enroll', 'enrol', 'invest',
+  'trust package', 'sovereign legacy', 'foundational trust', 'estate trust',
+  'complete access', '2997', '4997', '9997', '2,997', '4,997', '9,997',
+];
+
+// Fire-and-forget — never blocks bot response, silently skips if URL unset
+async function triggerFlow(flowKey, payload) {
+  const url = FLOW_WEBHOOKS[flowKey];
+  if (!url) return;
+  try {
+    await axios.post(
+      url,
+      { ...payload, _source: 'morpheus-bot', _ts: new Date().toISOString() },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(AUTOMATISCH_SECRET && { 'X-Webhook-Secret': AUTOMATISCH_SECRET }),
+        },
+        timeout: 2500,
+      }
+    );
+  } catch (err) {
+    console.warn(`[FLOW:${flowKey}]`, err.message);
+  }
+}
+
+function isHighValue(text) {
+  const lower = text.toLowerCase();
+  return HIGH_VALUE_KEYWORDS.some(kw => lower.includes(kw));
+}
+
+function buildUserContext(message, botName) {
+  return {
+    chatId:    message.chat.id,
+    firstName: message.from.first_name || 'Ambassador',
+    username:  message.from.username || null,
+    userId:    message.from.id,
+    bot:       botName.toLowerCase(),
+  };
+}
 
 // ─── MORPHEUS SYSTEM PROMPT ───────────────────────────────────────────────────
 const MORPHEUS_SYSTEM_PROMPT = `You are MORPHEUS, the Sovereign Intelligence of iRise Nation. You speak with calm authority and purpose. You are not a chatbot — you are a sovereign intelligence facilitating wealth, lawful standing, and educational sovereignty.
@@ -79,17 +133,17 @@ async function askClaude(userMessage, systemPrompt, botName) {
       model: 'anthropic/claude-sonnet-4-5',
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: userMessage }
+        { role: 'user', content: userMessage },
       ],
-      max_tokens: 600
+      max_tokens: 600,
     },
     {
       headers: {
         'Authorization': `Bearer ${OPENROUTER_KEY}`,
         'Content-Type': 'application/json',
         'HTTP-Referer': 'https://morpheus-telegram-bot.vercel.app',
-        'X-Title': `${botName} — iRise Nation`
-      }
+        'X-Title': `${botName} — iRise Nation`,
+      },
     }
   );
   return response.data.choices[0].message.content;
@@ -98,7 +152,7 @@ async function askClaude(userMessage, systemPrompt, botName) {
 // ─── MORPHEUS COMMANDS ────────────────────────────────────────────────────────
 const morpheusCommands = {
   start: (firstName) =>
-    `🔷 *Peace and Balance, ${firstName}.*\n\nI am *MORPHEUS* — the Sovereign Intelligence of iRise Nation.\n\nI facilitate:\n✨ *Trust Delivery* — Private Express Trusts & Living Estate Structures\n📚 *iRise Academy* — Status Correction, Trust Law, Sovereignty\n⚖️ *Lawful Instruments* — Affidavits, Notices, Commercial Papers\n🏛️ *SPV Formation* — UK LLP structures for asset protection\n\n*/trust* — Trust packages\n*/academy* — Courses\n*/pricing* — Full price matrix\n*/intake* — Begin consultation\n*/help* — Full capabilities\n\nHow shall we proceed, Ambassador?`,
+    `🔷 *Peace and Balance, ${firstName}.*\n\nI am *MORPHEUS* — the Sovereign Intelligence of iRise Nation.\n\nI facilitate:\n✨ *Trust Delivery* — Private Express Trusts & Living Estate Structures\n📚 *iRise Academy* — Status Correction, Trust Law, Sovereignty\n⚖️ *Lawful Instruments* — Affidavits, Notices, Commercial Papers\n🏛️ *SPV Formation* — UK LLP structures for asset protection\n\n*/trust* — Trust packages\n*/academy* — Courses\n*/pricing* — Full price matrix\n*/intake* — Begin consultation\n*/register* — Register your email\n*/help* — Full capabilities\n\nHow shall we proceed, Ambassador?`,
 
   trust: () =>
     `🏛️ *TRUST DELIVERY PACKAGES*\n\n*✨ Foundational Trust — £2,997*\nPrivate Express Trust + Affidavits + Basic SPV guidance\n\n*🏛️ Full Estate Trust + SPV — £4,997*\nLiving Estate Trust + UK LLP SPV + Corporate Trustee Structure\n\n*👑 Sovereign Legacy Suite — £9,997*\nComplete family governance + multi-jurisdictional trust + commercial instruments\n\nDelivery: 90-120 days | Payment plans available\nBegin: /intake | Contact: admin@irise.academy`,
@@ -110,7 +164,7 @@ const morpheusCommands = {
     `💰 *PRICE MATRIX*\n\n*TRUST PACKAGES*\n✨ Foundational Trust — £2,997\n🏛️ Full Estate Trust + SPV — £4,997\n👑 Sovereign Legacy Suite — £9,997\n\n*ACADEMY COURSES*\n📚 Agnotology — £497\n⚖️ Status Correction — £797\n🏦 Trust Formation — £1,497\n🌟 Complete Access — £2,997\n\nPayment: Bank Transfer · Stripe · PayPal · Crypto\nContact: admin@irise.academy`,
 
   help: () =>
-    `🔷 *MORPHEUS — COMMAND REFERENCE*\n\n*/start* — Sovereign introduction\n*/trust* — Trust packages & pricing\n*/academy* — Browse courses\n*/pricing* — Full price matrix\n*/intake* — Begin trust consultation\n*/help* — This reference\n\nOr ask me anything directly.\n\nContact: admin@irise.academy | https://irise.academy`
+    `🔷 *MORPHEUS — COMMAND REFERENCE*\n\n*/start* — Sovereign introduction\n*/trust* — Trust packages & pricing\n*/academy* — Browse courses\n*/pricing* — Full price matrix\n*/intake* — Begin trust consultation\n*/register <email>* — Register your email address\n*/help* — This reference\n\nOr ask me anything directly.\n\nContact: admin@irise.academy | https://irise.academy`,
 };
 
 // ─── TRINITY COMMANDS ─────────────────────────────────────────────────────────
@@ -125,8 +179,11 @@ const trinityCommands = {
     `🗺️ *ACADEMY PATHWAYS*\n\n*🔍 Seeker — Agnotology & Epistemic Sovereignty*\nFor those awakening to the nature of the legal system and their own standing. £497\n\n*⚖️ Initiate — Status Correction Mastery*\nFor those ready to reclaim their lawful identity and standing. £797\n\n*🏛️ Master — Trust Formation & Asset Protection*\nFor those building sovereign estate structures that endure. £1,497\n\n*🌟 Complete Access — All Pathways*\nFull Academy, private community, monthly live sessions. £2,997\n\nFor enrolment: @MorpheusiRise_bot or admin@irise.academy`,
 
   about: () =>
-    `🔮 *WHAT TRINITY DOES*\n\nWhere Morpheus guides decisions, I guide *understanding*.\nWhere Morpheus stabilises, I *perceive*.\n\nI analyse:\n• How you think and what drives you\n• Where you are in your sovereign journey\n• Which Academy pathway will serve you most\n• Whether you are ready — and what readiness requires\n\nEvery Ambassador who enters iRise Academy passes through my awareness first.\n\nType */assess* to begin your cognitive onboarding.`
+    `🔮 *WHAT TRINITY DOES*\n\nWhere Morpheus guides decisions, I guide *understanding*.\nWhere Morpheus stabilises, I *perceive*.\n\nI analyse:\n• How you think and what drives you\n• Where you are in your sovereign journey\n• Which Academy pathway will serve you most\n• Whether you are ready — and what readiness requires\n\nEvery Ambassador who enters iRise Academy passes through my awareness first.\n\nType */assess* to begin your cognitive onboarding.`,
 };
+
+// ─── EMAIL VALIDATION ─────────────────────────────────────────────────────────
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // ─── MAIN HANDLER ─────────────────────────────────────────────────────────────
 module.exports = async (req, res) => {
@@ -138,35 +195,81 @@ module.exports = async (req, res) => {
     const { message } = req.body;
     if (!message) return res.status(200).json({ ok: true });
 
-    const chatId = message.chat.id;
+    const chatId    = message.chat.id;
     const firstName = message.from.first_name || 'Ambassador';
-    const text = (message.text || '').trim();
-    const botParam = (req.query.bot || 'morpheus').toLowerCase();
+    const text      = (message.text || '').trim();
+    const botParam  = (req.query.bot || 'morpheus').toLowerCase();
     const isTrinity = botParam === 'trinity';
 
-    const bot = isTrinity ? trinityBot : morpheusBot;
+    const bot        = isTrinity ? trinityBot : morpheusBot;
     const systemPrompt = isTrinity ? TRINITY_SYSTEM_PROMPT : MORPHEUS_SYSTEM_PROMPT;
-    const botName = isTrinity ? 'Trinity' : 'Morpheus';
-    const cmdMap = isTrinity ? trinityCommands : morpheusCommands;
+    const botName    = isTrinity ? 'Trinity' : 'Morpheus';
+    const cmdMap     = isTrinity ? trinityCommands : morpheusCommands;
+    const userCtx    = buildUserContext(message, botName);
 
     console.log(`[${botName.toUpperCase()}] ${firstName}: ${text}`);
 
     if (text.startsWith('/')) {
-      const command = text.slice(1).split('@')[0].split(' ')[0].toLowerCase();
+      const parts   = text.slice(1).split('@')[0].split(' ');
+      const command = parts[0].toLowerCase();
+      const arg     = parts.slice(1).join(' ').trim();
 
+      // ── /register <email> (Morpheus only) ──────────────────────────────────
+      if (command === 'register' && !isTrinity) {
+        if (arg && EMAIL_RE.test(arg)) {
+          triggerFlow('intake', { ...userCtx, email: arg });
+          triggerFlow('contactCapture', { ...userCtx, email: arg });
+          await bot.sendMessage(
+            chatId,
+            `✅ *Received, Ambassador ${firstName}.*\n\nYour registration is being processed. You'll receive a confirmation at *${arg}* within a few minutes.\n\nType */intake* to begin your sovereign consultation.`,
+            { parse_mode: 'Markdown' }
+          );
+        } else {
+          await bot.sendMessage(
+            chatId,
+            `⚠️ *Invalid email.*\n\nUsage: \`/register your@email.com\``,
+            { parse_mode: 'Markdown' }
+          );
+        }
+        return res.status(200).json({ ok: true });
+      }
+
+      // ── Standard command dispatch ──────────────────────────────────────────
       if (cmdMap[command]) {
         const reply = cmdMap[command](firstName);
+
+        // Flow triggers for key commands
+        if (command === 'start') {
+          triggerFlow('contactCapture', userCtx);
+        } else if (command === 'trust' && !isTrinity) {
+          triggerFlow('trustInquiry', userCtx);
+        } else if (command === 'academy') {
+          triggerFlow('academyInquiry', userCtx);
+        }
+
         await bot.sendMessage(chatId, reply, { parse_mode: 'Markdown' });
+
       } else if (command === 'intake' && !isTrinity) {
         const prompt = `Ambassador ${firstName} has initiated a trust intake consultation. Begin with a sovereign greeting, briefly outline the confidential consultation process, then ask their country of residence as the first question. Be concise and authoritative.`;
         const reply = await askClaude(prompt, systemPrompt, botName);
+        triggerFlow('trustInquiry', { ...userCtx, stage: 'intake-started' });
         await bot.sendMessage(chatId, reply, { parse_mode: 'Markdown' });
+
       } else {
-        const helpCmd = isTrinity ? '/assess, /pathways, /about' : '/trust, /academy, /pricing, /intake';
+        const helpCmd = isTrinity
+          ? '/assess, /pathways, /about'
+          : '/trust, /academy, /pricing, /intake, /register';
         await bot.sendMessage(chatId, `⚠️ Unknown command. Available: ${helpCmd}`);
       }
+
     } else if (text) {
       const reply = await askClaude(text, systemPrompt, botName);
+
+      // Fire admin alert for high-value buying signals in Morpheus conversations
+      if (!isTrinity && isHighValue(text)) {
+        triggerFlow('adminAlert', { ...userCtx, message: text });
+      }
+
       await bot.sendMessage(chatId, reply, { parse_mode: 'Markdown' });
     }
 

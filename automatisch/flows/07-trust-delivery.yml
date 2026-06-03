@@ -1,0 +1,96 @@
+# ─── Flow 07: Trust Package Order Fulfillment ─────────────────────────────────
+# Triggered by Flow 05 (Stripe payment router) when product_type === "trust".
+# Sends order confirmation, notifies production team, and schedules a
+# 90-day delivery reminder.
+#
+# This flow is called internally by Flow 05 via HTTP action.
+# Vercel env var:  FLOW_WEBHOOK_TRUST_DELIVERY  (set in .env.automatisch)
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: "07 — Trust Package Order Fulfillment"
+description: "Confirm trust order, notify production, schedule delivery milestone"
+active: true
+
+trigger:
+  app: webhook
+  event: newWebhookPayloadReceived
+  name: "Internal: Trust payment confirmed"
+
+  # Incoming payload (from Flow 05 HTTP action):
+  # {
+  #   email:        <string>
+  #   customerName: <string>
+  #   productName:  <string>   e.g. "Sovereign Legacy Suite"
+  #   telegramId:   <string|null>
+  #   sessionId:    <string>
+  #   amountTotal:  <number>   in pence
+  # }
+
+actions:
+
+  # Step 1 — Send trust order confirmation email
+  - step: 1
+    app: brevo
+    event: sendTransactionalEmail
+    name: "Brevo — Trust Order Confirmation"
+    parameters:
+      templateId: "{{env.BREVO_TRUST_ORDER_TEMPLATE_ID}}"
+      to:
+        - email: "{{trigger.body.email}}"
+          name:  "{{trigger.body.customerName}}"
+      params:
+        customerName: "{{trigger.body.customerName}}"
+        productName:  "{{trigger.body.productName}}"
+        deliveryDays: "90-120"
+        sessionId:    "{{trigger.body.sessionId}}"
+
+  # Step 2 — Add to Brevo trust client list
+  - step: 2
+    app: brevo
+    event: createOrUpdateContact
+    name: "Brevo — Move to Trust Client List"
+    parameters:
+      email: "{{trigger.body.email}}"
+      attributes:
+        TRUST_ORDER_DATE:    "now"
+        TRUST_PRODUCT:       "{{trigger.body.productName}}"
+        TRUST_DELIVERY_DUE:  "+90days"
+        LEAD_STAGE:          "trust-client"
+      listIds:
+        - "{{env.BREVO_TRUST_CLIENT_LIST_ID}}"
+      updateEnabled: true
+
+  # Step 3 — Alert admin / production team
+  - step: 3
+    app: telegram
+    event: sendMessage
+    name: "Telegram — Production Alert: New Trust Order"
+    parameters:
+      chat_id: "{{env.ADMIN_TELEGRAM_CHAT_ID}}"
+      text: |
+        📜 *NEW TRUST ORDER*
+        Product: {{trigger.body.productName}}
+        Client: {{trigger.body.customerName}}
+        Email: {{trigger.body.email}}
+        Telegram ID: {{trigger.body.telegramId}}
+        Session: {{trigger.body.sessionId}}
+
+        ⏰ Delivery target: 90-120 days
+        Start document production now.
+      parse_mode: "Markdown"
+
+  # Step 4 — Send 30-day progress update email
+  # Set step delay to 30 days (2592000 seconds) in Automatisch UI
+  - step: 4
+    app: brevo
+    event: sendTransactionalEmail
+    name: "Brevo — 30-Day Progress Update"
+    parameters:
+      templateId: "{{env.BREVO_TRUST_ORDER_TEMPLATE_ID}}"
+      to:
+        - email: "{{trigger.body.email}}"
+          name:  "{{trigger.body.customerName}}"
+      params:
+        customerName: "{{trigger.body.customerName}}"
+        productName:  "{{trigger.body.productName}}"
+        updateType:   "30-day-progress"

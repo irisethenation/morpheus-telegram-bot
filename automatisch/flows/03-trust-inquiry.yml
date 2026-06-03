@@ -1,0 +1,63 @@
+# ─── Flow 03: Trust Package Inquiry ──────────────────────────────────────────
+# Triggered when a user views /trust or begins /intake on Morpheus bot.
+# Tags the contact in Brevo as trust-interested and notifies the admin.
+#
+# Vercel env var:  FLOW_WEBHOOK_TRUST_INQUIRY
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: "03 — Trust Package Inquiry"
+description: "Tag trust-interested leads in Brevo and alert admin"
+active: true
+
+trigger:
+  app: webhook
+  event: newWebhookPayloadReceived
+  name: "Bot /trust or /intake trigger"
+
+  # Incoming payload fields:
+  # {
+  #   chatId:    <number>
+  #   firstName: <string>
+  #   username:  <string|null>
+  #   userId:    <number>
+  #   bot:       "morpheus"
+  #   stage:     "trust-viewed" | "intake-started"  (optional)
+  #   _source:   "morpheus-bot"
+  #   _ts:       ISO timestamp
+  # }
+
+actions:
+
+  # Step 1 — Update Brevo contact with trust inquiry tag
+  # Filter condition: only proceed if trigger.body.email exists
+  # (Brevo requires email for contact lookup; skip silently if absent)
+  - step: 1
+    app: brevo
+    event: createOrUpdateContact
+    name: "Brevo — Tag: Trust Interested"
+    parameters:
+      email: "{{trigger.body.email}}"
+      attributes:
+        TRUST_INTEREST_DATE: "{{trigger.body._ts}}"
+        LEAD_STAGE:          "trust-inquiry"
+      listIds:
+        - "{{env.BREVO_LEAD_LIST_ID}}"
+      updateEnabled: true
+
+  # Step 2 — Notify admin (always fires regardless of email)
+  - step: 2
+    app: telegram
+    event: sendMessage
+    name: "Telegram — Alert Admin: Trust Inquiry"
+    parameters:
+      chat_id: "{{env.ADMIN_TELEGRAM_CHAT_ID}}"
+      text: |
+        🏛️ *Trust Inquiry*
+        Ambassador: {{trigger.body.firstName}}
+        @{{trigger.body.username}}
+        Telegram ID: {{trigger.body.chatId}}
+        Stage: {{trigger.body.stage}}
+        Time: {{trigger.body._ts}}
+
+        Follow up: https://t.me/{{trigger.body.username}}
+      parse_mode: "Markdown"

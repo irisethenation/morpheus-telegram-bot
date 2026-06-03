@@ -1,0 +1,114 @@
+# ─── Flow 08: Academy Course Enrollment ──────────────────────────────────────
+# Triggered by Flow 05 (Stripe payment router) when product_type === "academy".
+# Grants access, sends course welcome email, adds to student list,
+# starts the Academy drip campaign.
+#
+# This flow is called internally by Flow 05 via HTTP action.
+# Vercel env var:  FLOW_WEBHOOK_COURSE_ENROLLMENT  (set in .env.automatisch)
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: "08 — Academy Course Enrollment"
+description: "Grant course access, welcome email, drip campaign"
+active: true
+
+trigger:
+  app: webhook
+  event: newWebhookPayloadReceived
+  name: "Internal: Course payment confirmed"
+
+  # Incoming payload (from Flow 05 HTTP action):
+  # {
+  #   email:        <string>
+  #   customerName: <string>
+  #   productName:  <string>   e.g. "Status Correction Mastery"
+  #   telegramId:   <string|null>
+  #   sessionId:    <string>
+  # }
+
+actions:
+
+  # Step 1 — Send enrollment confirmation + portal access email
+  - step: 1
+    app: brevo
+    event: sendTransactionalEmail
+    name: "Brevo — Course Access Email"
+    parameters:
+      templateId: "{{env.BREVO_ENROLLMENT_TEMPLATE_ID}}"
+      to:
+        - email: "{{trigger.body.email}}"
+          name:  "{{trigger.body.customerName}}"
+      params:
+        customerName: "{{trigger.body.customerName}}"
+        courseName:   "{{trigger.body.productName}}"
+        portalUrl:    "https://academy.irise.academy"
+        sessionId:    "{{trigger.body.sessionId}}"
+
+  # Step 2 — Add to Brevo student list + set enrolled attributes
+  - step: 2
+    app: brevo
+    event: createOrUpdateContact
+    name: "Brevo — Add to Student List"
+    parameters:
+      email: "{{trigger.body.email}}"
+      attributes:
+        FIRSTNAME:           "{{trigger.body.customerName}}"
+        COURSE_ENROLLED:     "{{trigger.body.productName}}"
+        ENROLLMENT_DATE:     "now"
+        STUDENT_STATUS:      "active"
+        LEAD_STAGE:          "student"
+      listIds:
+        - "{{env.BREVO_STUDENT_LIST_ID}}"
+      unlinkListIds:
+        - "{{env.BREVO_LEAD_LIST_ID}}"
+      updateEnabled: true
+
+  # Step 3 — Notify admin
+  - step: 3
+    app: telegram
+    event: sendMessage
+    name: "Telegram — Alert Admin: New Enrollment"
+    parameters:
+      chat_id: "{{env.ADMIN_TELEGRAM_CHAT_ID}}"
+      text: |
+        🎓 *NEW ENROLLMENT*
+        Course: {{trigger.body.productName}}
+        Student: {{trigger.body.customerName}}
+        Email: {{trigger.body.email}}
+        Telegram ID: {{trigger.body.telegramId}}
+        Session: {{trigger.body.sessionId}}
+      parse_mode: "Markdown"
+
+  # Step 4 — Notify student via Telegram (if they registered their chat ID)
+  # Add filter: trigger.body.telegramId is not empty
+  - step: 4
+    app: telegram
+    event: sendMessage
+    name: "Telegram — Welcome Message to Student"
+    parameters:
+      chat_id: "{{trigger.body.telegramId}}"
+      text: |
+        🎓 *Welcome to iRise Academy, Ambassador.*
+
+        Your enrollment in *{{trigger.body.productName}}* is confirmed.
+
+        Portal access: https://academy.irise.academy
+        Support: admin@irise.academy
+
+        Your sovereign journey begins now.
+      parse_mode: "Markdown"
+
+  # Step 5 — Day 3 check-in email
+  # Add step delay: 3 days in Automatisch UI
+  - step: 5
+    app: brevo
+    event: sendTransactionalEmail
+    name: "Brevo — Day 3 Student Check-In"
+    parameters:
+      templateId: "{{env.BREVO_ENROLLMENT_TEMPLATE_ID}}"
+      to:
+        - email: "{{trigger.body.email}}"
+          name:  "{{trigger.body.customerName}}"
+      params:
+        customerName: "{{trigger.body.customerName}}"
+        courseName:   "{{trigger.body.productName}}"
+        emailType:    "day3-checkin"

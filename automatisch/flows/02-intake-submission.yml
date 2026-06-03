@@ -1,0 +1,93 @@
+# ─── Flow 02: Intake Submission & Email Registration ──────────────────────────
+# Triggered when a user runs /register <email>.
+# Adds them to Brevo with full contact details, sends a confirmation email,
+# and alerts the admin.
+#
+# Vercel env var:  FLOW_WEBHOOK_INTAKE
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: "02 — Intake Submission & Email Registration"
+description: "Capture email, add to Brevo, send confirmation, alert admin"
+active: true
+
+trigger:
+  app: webhook
+  event: newWebhookPayloadReceived
+  name: "Bot /register trigger"
+
+  # Incoming payload fields:
+  # {
+  #   chatId:    <number>
+  #   firstName: <string>
+  #   username:  <string|null>
+  #   userId:    <number>
+  #   bot:       "morpheus"|"trinity"
+  #   email:     <string>   validated email address (always present here)
+  #   _source:   "morpheus-bot"
+  #   _ts:       ISO timestamp
+  # }
+
+actions:
+
+  # Step 1 — Add lead to Brevo with intake tags
+  - step: 1
+    app: brevo
+    event: createOrUpdateContact
+    name: "Brevo — Register Contact"
+    parameters:
+      email: "{{trigger.body.email}}"
+      attributes:
+        FIRSTNAME:      "{{trigger.body.firstName}}"
+        TELEGRAM_ID:    "{{trigger.body.chatId}}"
+        BOT_SOURCE:     "{{trigger.body.bot}}"
+        INTAKE_DATE:    "{{trigger.body._ts}}"
+        SOURCE:         "telegram-intake"
+      listIds:
+        - "{{env.BREVO_LEAD_LIST_ID}}"
+      updateEnabled: true
+
+  # Step 2 — Send confirmation email to new lead
+  - step: 2
+    app: brevo
+    event: sendTransactionalEmail
+    name: "Brevo — Welcome / Intake Confirmation Email"
+    parameters:
+      templateId: "{{env.BREVO_INTAKE_CONFIRM_TEMPLATE_ID}}"
+      to:
+        - email: "{{trigger.body.email}}"
+          name:  "{{trigger.body.firstName}}"
+      params:
+        firstName: "{{trigger.body.firstName}}"
+        botName:   "{{trigger.body.bot}}"
+
+  # Step 3 — Alert admin on Telegram
+  - step: 3
+    app: telegram
+    event: sendMessage
+    name: "Telegram — Alert Admin: Intake Registered"
+    parameters:
+      chat_id: "{{env.ADMIN_TELEGRAM_CHAT_ID}}"
+      text: |
+        📋 *Intake Registration*
+        Name: {{trigger.body.firstName}}
+        Email: {{trigger.body.email}}
+        Bot: {{trigger.body.bot}}
+        Telegram ID: {{trigger.body.chatId}}
+        Registered: {{trigger.body._ts}}
+      parse_mode: "Markdown"
+
+  # Step 4 — Send follow-up email 24 hours later
+  # Use Automatisch's built-in delay + Brevo template
+  - step: 4
+    app: brevo
+    event: sendTransactionalEmail
+    name: "Brevo — 24h Follow-Up Email"
+    delay: 86400   # 24 hours in seconds (if Automatisch supports step delay)
+    parameters:
+      templateId: "{{env.BREVO_INTAKE_CONFIRM_TEMPLATE_ID}}"
+      to:
+        - email: "{{trigger.body.email}}"
+          name:  "{{trigger.body.firstName}}"
+      params:
+        firstName: "{{trigger.body.firstName}}"
+        followUp: true

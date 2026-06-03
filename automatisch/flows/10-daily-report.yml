@@ -1,0 +1,78 @@
+# ─── Flow 10: Daily Engagement Report ────────────────────────────────────────
+# Scheduled every morning at 09:00.
+# Queries recent flows for stats and sends a summary to the admin.
+# This uses the Automatisch Scheduler trigger — no external webhook needed.
+#
+# No Vercel env var required — purely internal schedule.
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: "10 — Daily Engagement Report"
+description: "Send daily admin report at 09:00 with overnight lead & interaction stats"
+active: true
+
+trigger:
+  app: scheduler
+  event: everyDay
+  name: "Schedule: Daily at 09:00"
+  parameters:
+    hour:   "9"
+    minute: "0"
+
+actions:
+
+  # Step 1 — Send daily summary to admin via Telegram
+  # Note: Automatisch doesn't query its own flow logs natively.
+  # For a richer report, connect to a Google Sheet or database
+  # where your other flows write event counts.
+  # As a baseline, this sends a prompt reminder to the admin.
+  - step: 1
+    app: telegram
+    event: sendMessage
+    name: "Telegram — Morning Briefing to Admin"
+    parameters:
+      chat_id: "{{env.ADMIN_TELEGRAM_CHAT_ID}}"
+      text: |
+        ☀️ *iRise Nation — Daily Briefing*
+
+        Good morning. Here is your sovereign dashboard overview.
+
+        📊 Check overnight activity:
+        • New leads: Automatisch → Flow 01 history
+        • Trust inquiries: Automatisch → Flow 03 history
+        • Academy inquiries: Automatisch → Flow 04 history
+        • Payments: Automatisch → Flow 05 history
+        • High-value signals: Automatisch → Flow 06 history
+
+        🔗 Automatisch dashboard: {{env.HOST}}/flows
+        📧 Inbox: admin@irise.academy
+        📆 Calendly: https://calendly.com/irise-academy
+
+        May this day be sovereign and purposeful.
+      parse_mode: "Markdown"
+
+  # Step 2 — Optional: Send report email to admin
+  # Uncomment and configure if you want an email version too
+  # - step: 2
+  #   app: brevo
+  #   event: sendTransactionalEmail
+  #   name: "Brevo — Daily Report Email"
+  #   parameters:
+  #     templateId: "{{env.BREVO_DAILY_REPORT_TEMPLATE_ID}}"
+  #     to:
+  #       - email: "{{env.INITIAL_USER_EMAIL}}"
+  #         name:  "iRise Admin"
+  #     params:
+  #       date: "{{now}}"
+
+# ─── Enhancement: Rich Stats (requires Google Sheets integration) ─────────────
+# Add these action steps to pull real numbers from a Google Sheet
+# where your flows write event counts via Step "Google Sheets — Append Row":
+#
+# - step: 2
+#   app: google-sheets
+#   event: getRows
+#   name: "Sheets — Get Yesterday's Stats"
+#   parameters:
+#     spreadsheetId: "{{env.STATS_SPREADSHEET_ID}}"
+#     sheetName: "Daily Stats"
+#     filter: "date = yesterday"
