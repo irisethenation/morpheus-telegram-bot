@@ -1,0 +1,65 @@
+# ─── Flow 06: Admin Alert — High-Value Buying Signal ─────────────────────────
+# Triggered when the bot detects high-value keywords in a free-text message
+# (e.g., "I want to purchase", "how do I pay", "sovereign legacy", etc.)
+#
+# Vercel env var:  FLOW_WEBHOOK_ADMIN_ALERT
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: "05 — Admin Alert — High-Value Signal"
+description: "Urgent Telegram alert + CRM tag when a buying signal is detected"
+active: true
+
+trigger:
+  app: webhook
+  event: newWebhookPayloadReceived
+  name: "Bot high-value keyword detected"
+
+  # Incoming payload fields:
+  # {
+  #   chatId:    <number>
+  #   firstName: <string>
+  #   username:  <string|null>
+  #   userId:    <number>
+  #   bot:       "morpheus"
+  #   message:   <string>   the raw message text containing the buying signal
+  #   _source:   "morpheus-bot"
+  #   _ts:       ISO timestamp
+  # }
+
+actions:
+
+  # Step 1 — Immediate admin Telegram alert
+  - step: 1
+    app: telegram
+    event: sendMessage
+    name: "Telegram — URGENT: Buying Signal"
+    parameters:
+      chat_id: "{{env.ADMIN_TELEGRAM_CHAT_ID}}"
+      text: |
+        🔥 *BUYING SIGNAL DETECTED*
+
+        Ambassador: {{trigger.body.firstName}}
+        @{{trigger.body.username}}
+        Telegram ID: {{trigger.body.chatId}}
+        Bot: {{trigger.body.bot}}
+
+        Message:
+        "{{trigger.body.message}}"
+
+        Reply directly: https://t.me/{{trigger.body.username}}
+        Time: {{trigger.body._ts}}
+      parse_mode: "Markdown"
+
+  # Step 2 — Tag contact in Brevo as hot lead
+  - step: 2
+    app: brevo
+    event: createOrUpdateContact
+    name: "Brevo — Tag: Hot Lead"
+    # Filter: only if email exists
+    parameters:
+      email: "{{trigger.body.email}}"
+      attributes:
+        BUYING_SIGNAL_DATE: "{{trigger.body._ts}}"
+        LEAD_STAGE:         "hot-lead"
+        LAST_MESSAGE:       "{{trigger.body.message}}"
+      updateEnabled: true

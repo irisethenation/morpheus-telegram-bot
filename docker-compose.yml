@@ -1,0 +1,82 @@
+version: '3.8'
+
+# ─── iRise Nation — Automatisch Workflow Automation Stack ─────────────────────
+# Open-source Zapier alternative for micro-task orchestration
+# Docs: https://automatisch.io/docs
+# Run: docker compose up -d
+# UI:  http://localhost:3000  (or your public domain)
+
+services:
+
+  # ── Automatisch Web App + API ─────────────────────────────────────────────
+  automatisch-app:
+    image: automatisch/automatisch:latest
+    container_name: irise_automatisch
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    env_file:
+      - .env.automatisch
+    ports:
+      - '${PORT:-3000}:3000'
+    volumes:
+      - automatisch_storage:/automatisch/storage
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/v1/health']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  # ── Automatisch Background Worker (job queue processor) ───────────────────
+  automatisch-worker:
+    image: automatisch/automatisch:latest
+    container_name: irise_automatisch_worker
+    restart: unless-stopped
+    command: node packages/backend/dist/worker.js
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    env_file:
+      - .env.automatisch
+    volumes:
+      - automatisch_storage:/automatisch/storage
+
+  # ── PostgreSQL Database ───────────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: irise_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DATABASE:-automatisch}
+      POSTGRES_USER: ${POSTGRES_USERNAME:-automatisch}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USERNAME:-automatisch} -d ${POSTGRES_DATABASE:-automatisch}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis (job queue + caching) ───────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: irise_redis
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redis_data:/data
+
+volumes:
+  automatisch_storage:
+    name: irise_automatisch_storage
+  postgres_data:
+    name: irise_postgres_data
+  redis_data:
+    name: irise_redis_data

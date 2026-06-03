@@ -1,0 +1,73 @@
+# ─── Flow 04: Academy Course Inquiry ──────────────────────────────────────────
+# Triggered when a user views /academy on either bot.
+# Tags the contact in Brevo as academy-interested and starts a course drip.
+#
+# Vercel env var:  FLOW_WEBHOOK_ACADEMY_INQUIRY
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: "04 — Academy Course Inquiry"
+description: "Tag academy-interested leads and route to Trinity for assessment"
+active: true
+
+trigger:
+  app: webhook
+  event: newWebhookPayloadReceived
+  name: "Bot /academy trigger"
+
+  # Incoming payload fields:
+  # {
+  #   chatId:    <number>
+  #   firstName: <string>
+  #   username:  <string|null>
+  #   userId:    <number>
+  #   bot:       "morpheus"|"trinity"
+  #   _source:   "morpheus-bot"
+  #   _ts:       ISO timestamp
+  # }
+
+actions:
+
+  # Step 1 — Tag contact in Brevo as academy-interested
+  - step: 1
+    app: brevo
+    event: createOrUpdateContact
+    name: "Brevo — Tag: Academy Interested"
+    parameters:
+      email: "{{trigger.body.email}}"
+      attributes:
+        ACADEMY_INTEREST_DATE: "{{trigger.body._ts}}"
+        LEAD_STAGE:            "academy-inquiry"
+      listIds:
+        - "{{env.BREVO_LEAD_LIST_ID}}"
+      updateEnabled: true
+
+  # Step 2 — Alert admin
+  - step: 2
+    app: telegram
+    event: sendMessage
+    name: "Telegram — Alert Admin: Academy Inquiry"
+    parameters:
+      chat_id: "{{env.ADMIN_TELEGRAM_CHAT_ID}}"
+      text: |
+        📚 *Academy Inquiry*
+        Ambassador: {{trigger.body.firstName}}
+        @{{trigger.body.username}}
+        Bot: {{trigger.body.bot}}
+        Telegram ID: {{trigger.body.chatId}}
+        Time: {{trigger.body._ts}}
+      parse_mode: "Markdown"
+
+  # Step 3 — Send Academy overview email (if email registered)
+  # Add filter: trigger.body.email is not empty
+  - step: 3
+    app: brevo
+    event: sendTransactionalEmail
+    name: "Brevo — Academy Overview Email"
+    parameters:
+      templateId: "{{env.BREVO_ACADEMY_OVERVIEW_TEMPLATE_ID}}"
+      to:
+        - email: "{{trigger.body.email}}"
+          name:  "{{trigger.body.firstName}}"
+      params:
+        firstName:  "{{trigger.body.firstName}}"
+        trinityUrl: "https://t.me/TrinityiRise_bot"

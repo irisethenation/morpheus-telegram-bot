@@ -1,0 +1,67 @@
+# ─── Flow 01: Contact Capture — Lead Registration ─────────────────────────────
+# Triggered on every /start command to either bot.
+# Captures the Telegram user as a new lead in Brevo and notifies the admin.
+#
+# Vercel env var:  FLOW_WEBHOOK_CONTACT_CAPTURE
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: "01 — Contact Capture"
+description: "Register new Telegram leads in Brevo on bot /start"
+active: true
+
+trigger:
+  app: webhook
+  event: newWebhookPayloadReceived
+  name: "Bot /start trigger"
+  # Set the webhook URL output as FLOW_WEBHOOK_CONTACT_CAPTURE in Vercel
+
+  # Incoming payload fields:
+  # {
+  #   chatId:    <number>   Telegram chat ID
+  #   firstName: <string>   User's first name
+  #   username:  <string|null>
+  #   userId:    <number>
+  #   bot:       "morpheus"|"trinity"
+  #   email:     <string|null>   present only if user also ran /register
+  #   _source:   "morpheus-bot"
+  #   _ts:       ISO timestamp
+  # }
+
+actions:
+
+  # Step 1 — Add/update contact in Brevo
+  # Requires: Brevo integration connected in Automatisch Settings
+  - step: 1
+    app: brevo
+    event: createOrUpdateContact
+    name: "Brevo — Add Lead Contact"
+    parameters:
+      email: "{{trigger.body.email}}"            # empty if no /register yet
+      attributes:
+        FIRSTNAME:    "{{trigger.body.firstName}}"
+        TELEGRAM_ID:  "{{trigger.body.chatId}}"
+        BOT_SOURCE:   "{{trigger.body.bot}}"
+        LAST_SEEN:    "{{trigger.body._ts}}"
+        SOURCE:       "telegram-bot"
+      listIds:
+        - "{{env.BREVO_LEAD_LIST_ID}}"
+      updateEnabled: true
+    # Note: If email is empty Brevo will reject — add a filter step:
+    # "Continue only if: trigger.body.email is not empty"
+
+  # Step 2 — Notify admin via Telegram
+  # Requires: Telegram integration connected in Automatisch Settings
+  - step: 2
+    app: telegram
+    event: sendMessage
+    name: "Telegram — Notify Admin: New Lead"
+    parameters:
+      chat_id: "{{env.ADMIN_TELEGRAM_CHAT_ID}}"
+      text: |
+        🆕 *New Lead*
+        Name: {{trigger.body.firstName}}
+        Bot: {{trigger.body.bot}}
+        Telegram ID: {{trigger.body.chatId}}
+        Username: @{{trigger.body.username}}
+        Time: {{trigger.body._ts}}
+      parse_mode: "Markdown"

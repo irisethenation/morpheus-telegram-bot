@@ -1,11 +1,16 @@
 {
   "name": "morpheus-telegram-bot",
-  "version": "1.0.0",
-  "description": "iRise Morpheus Telegram Bot - Trust Delivery & Academy Revenue System",
-  "main": "api/webhook.js",
+  "version": "2.0.0",
+  "description": "iRise Morpheus Telegram Bot — Trust Delivery & Academy Revenue System with Automatisch Workflow Automation",
+  "main": "webhook.js",
   "scripts": {
     "dev": "vercel dev",
-    "deploy": "vercel --prod"
+    "deploy": "vercel --prod",
+    "automatisch:up": "docker compose up -d",
+    "automatisch:down": "docker compose down",
+    "automatisch:logs": "docker compose logs -f automatisch-app",
+    "automatisch:setup": "node automatisch/setup-flows.js",
+    "automatisch:reset": "docker compose down -v && docker compose up -d"
   },
   "dependencies": {
     "node-telegram-bot-api": "^0.64.0",

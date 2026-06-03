@@ -1,0 +1,119 @@
+# ─── Flow 05: Stripe Payment Received — Router ────────────────────────────────
+# Receives Stripe checkout.session.completed webhooks directly from Stripe.
+# Routes to trust delivery (Flow 07) or course enrollment (Flow 08) based on
+# the product type embedded in the Stripe metadata.
+#
+# Stripe Webhook Setup:
+#   Dashboard → Webhooks → Add endpoint
+#   URL:    https://automatisch.irise.academy/webhooks/<this-flow-trigger-id>
+#   Events: checkout.session.completed
+#
+# Vercel env var:  FLOW_WEBHOOK_STRIPE_PAYMENT  (optional — for manual triggers)
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: "05 — Stripe Payment Received"
+description: "Route Stripe payments to trust delivery or course enrollment flows"
+active: true
+
+trigger:
+  app: webhook
+  event: newWebhookPayloadReceived
+  name: "Stripe: checkout.session.completed"
+
+  # Stripe sends the full event object. Key fields:
+  # {
+  #   type: "checkout.session.completed"
+  #   data.object: {
+  #     id:             <session_id>
+  #     customer_email: <email>
+  #     amount_total:   <pence>
+  #     metadata: {
+  #       product_type: "trust"|"academy"
+  #       product_name: "Foundational Trust"|"Complete Academy Access"|etc.
+  #       customer_name: <string>
+  #       telegram_chat_id: <string>   (add to Stripe checkout metadata)
+  #     }
+  #   }
+  # }
+  #
+  # To pass telegram_chat_id to Stripe, update your Stripe checkout session
+  # creation to include: metadata: { telegram_chat_id: chatId }
+
+actions:
+
+  # Step 1 — Send order received confirmation email via Brevo
+  - step: 1
+    app: brevo
+    event: sendTransactionalEmail
+    name: "Brevo — Order Confirmation Email"
+    parameters:
+      templateId: "{{env.BREVO_ORDER_CONFIRM_TEMPLATE_ID}}"
+      to:
+        - email: "{{trigger.body.data.object.customer_email}}"
+          name:  "{{trigger.body.data.object.metadata.customer_name}}"
+      params:
+        customerName: "{{trigger.body.data.object.metadata.customer_name}}"
+        productName:  "{{trigger.body.data.object.metadata.product_name}}"
+        amountGBP:    "{{trigger.body.data.object.amount_total}}"
+        sessionId:    "{{trigger.body.data.object.id}}"
+
+  # Step 2 — Notify admin immediately
+  - step: 2
+    app: telegram
+    event: sendMessage
+    name: "Telegram — Alert Admin: Payment Received"
+    parameters:
+      chat_id: "{{env.ADMIN_TELEGRAM_CHAT_ID}}"
+      text: |
+        💰 *PAYMENT RECEIVED*
+        Product: {{trigger.body.data.object.metadata.product_name}}
+        Customer: {{trigger.body.data.object.metadata.customer_name}}
+        Email: {{trigger.body.data.object.customer_email}}
+        Amount: £{{trigger.body.data.object.amount_total}}
+        Session: {{trigger.body.data.object.id}}
+        Type: {{trigger.body.data.object.metadata.product_type}}
+      parse_mode: "Markdown"
+
+  # Steps 3-4: Add filter conditions in the UI to branch on product_type:
+  #   IF metadata.product_type === "trust"   → POST to Flow 07 webhook
+  #   IF metadata.product_type === "academy" → POST to Flow 08 webhook
+  #
+  # Use Automatisch's HTTP Request action to POST to those flow webhooks
+  # with the payment data as the body.
+
+  - step: 3
+    app: http
+    event: sendRequest
+    name: "HTTP — Route to Trust Delivery (if trust product)"
+    # Add filter condition: trigger.body.data.object.metadata.product_type === "trust"
+    parameters:
+      url:    "{{env.FLOW_WEBHOOK_TRUST_DELIVERY}}"
+      method: "POST"
+      headers:
+        Content-Type: "application/json"
+        X-Webhook-Secret: "{{env.AUTOMATISCH_WEBHOOK_SECRET}}"
+      body:
+        email:        "{{trigger.body.data.object.customer_email}}"
+        customerName: "{{trigger.body.data.object.metadata.customer_name}}"
+        productName:  "{{trigger.body.data.object.metadata.product_name}}"
+        telegramId:   "{{trigger.body.data.object.metadata.telegram_chat_id}}"
+        sessionId:    "{{trigger.body.data.object.id}}"
+        amountTotal:  "{{trigger.body.data.object.amount_total}}"
+
+  - step: 4
+    app: http
+    event: sendRequest
+    name: "HTTP — Route to Course Enrollment (if academy product)"
+    # Add filter condition: trigger.body.data.object.metadata.product_type === "academy"
+    parameters:
+      url:    "{{env.FLOW_WEBHOOK_COURSE_ENROLLMENT}}"
+      method: "POST"
+      headers:
+        Content-Type: "application/json"
+        X-Webhook-Secret: "{{env.AUTOMATISCH_WEBHOOK_SECRET}}"
+      body:
+        email:        "{{trigger.body.data.object.customer_email}}"
+        customerName: "{{trigger.body.data.object.metadata.customer_name}}"
+        productName:  "{{trigger.body.data.object.metadata.product_name}}"
+        telegramId:   "{{trigger.body.data.object.metadata.telegram_chat_id}}"
+        sessionId:    "{{trigger.body.data.object.id}}"
