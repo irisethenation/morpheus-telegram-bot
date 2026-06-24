@@ -12,6 +12,10 @@ const TRINITY_TOKEN = process.env.TELEGRAM_BOT_TOKEN_TRINITY;
 const OPENROUTER_KEY = process.env.MORPHEUS_API_KEY;
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
+const ANTHROPIC_API_KEY_ID = process.env.ANTHROPIC_API_KEY_ID;
+const ANTHROPIC_OAUTH_TOKEN = process.env.ANTHROPIC_OAUTH_TOKEN;
+const ANTHROPIC_ORGS_URL = 'https://api.anthropic.com/v1/organizations/api_keys';
+
 const morpheusBot = new TelegramBot(MORPHEUS_TOKEN);
 const trinityBot = new TelegramBot(TRINITY_TOKEN);
 
@@ -93,6 +97,20 @@ async function askClaude(userMessage, systemPrompt, botName) {
     }
   );
   return response.data.choices[0].message.content;
+}
+
+// ─── ANTHROPIC ORGANIZATIONS API ─────────────────────────────────────────────
+async function getAnthropicApiKey(apiKeyId, oauthToken) {
+  const response = await axios.get(
+    `${ANTHROPIC_ORGS_URL}/${apiKeyId}`,
+    {
+      headers: {
+        'anthropic-version': '2023-06-01',
+        'Authorization': `Bearer ${oauthToken}`
+      }
+    }
+  );
+  return response.data;
 }
 
 // ─── MORPHEUS COMMANDS ────────────────────────────────────────────────────────
